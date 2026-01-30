@@ -9,12 +9,12 @@
     <Import_RootNamespace>DriveRPC.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\ISecureStorage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IRpcController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ISecureStorage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IUiThread.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\SecureStorageKeys.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\StatusViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SettingsViewModel.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Interfaces\" />
   </ItemGroup>
 </Project>
