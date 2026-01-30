@@ -154,6 +154,9 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.8</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.UI.Xaml">
+      <Version>2.6.0</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="..\DriveRPC.Shared\DriveRPC.Shared.projitems" Label="Shared" />
   <Import Project="..\DriveRPC.Shared.UWP\DriveRPC.Shared.UWP.projitems" Label="Shared" />
