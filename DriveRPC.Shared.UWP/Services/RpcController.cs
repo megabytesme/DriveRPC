@@ -1,7 +1,9 @@
 ﻿using DriveRPC.Shared.Models;
 using DriveRPC.Shared.Services;
 using DriveRPC.Shared.UWP.Helpers;
+using DriveRPC.Shared.ViewModels;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using UserPresenceRPC.Discord.Net.Interfaces;
 using UserPresenceRPC.Discord.Net.Logic;
@@ -12,6 +14,8 @@ namespace DriveRPC.Shared.UWP.Services
 {
     public class RpcController : IRpcController
     {
+        protected readonly SettingsViewModel _settingsVm;
+
         private static readonly Lazy<RpcController> _instance =
             new Lazy<RpcController>(() => new RpcController(new SecureStorage()));
 
@@ -20,6 +24,16 @@ namespace DriveRPC.Shared.UWP.Services
         private RpcController(ISecureStorage secureStorage)
         {
             _secureStorage = secureStorage;
+
+            try
+            {
+                _settingsVm = new SettingsViewModel(new SecureStorage());
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[SettingsPageBase] Constructor FAILED: " + ex);
+                throw;
+            }
         }
 
         private readonly ISecureStorage _secureStorage;
@@ -67,13 +81,37 @@ namespace DriveRPC.Shared.UWP.Services
 
             await _client.ConnectAsync();
 
+#if UWP1507
+            var rawLargeImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Icon/DriveRPC.png";
+#else
+            var rawLargeImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Icon/DriveRPC-3D.png";
+#endif
+            var rawSmallImg = string.Empty;
+
+            if (OSHelper.IsWindows11)
+            {
+                rawSmallImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2021).png";
+            }
+            else
+            {
+                rawSmallImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2012).png";
+            }
+
+            var proxiedLargeImage = await DiscordGatewayClient.ResolveExternalImageAsync(rawLargeImg, options.ApplicationId, options.Token);
+            var proxiedSmallImage = await DiscordGatewayClient.ResolveExternalImageAsync(rawSmallImg, options.ApplicationId, options.Token);
+
             var config = new RpcConfig
             {
-                Name = "Driving with DriveRPC",
+                Name = "Driving",
                 Details = "Sharing my drive on Discord",
+                State = " Using DriveRPC for Windows " + $"{_settingsVm.GetAppVersion()} ({_settingsVm.GetAppName()}) {_settingsVm.GetArchitecture()}",
                 Status = "online",
                 Type = "0",
-                Platform = "desktop"
+                Platform = "desktop",
+                LargeImg = proxiedLargeImage,
+                LargeText = "DriveRPC",
+                SmallImg = proxiedSmallImage,
+                SmallText = OSHelper.IsWindows11? "Windows 11": "Windows 10",
             };
 
             var presence = RpcHelper.BuildPresence(config, AppId);
