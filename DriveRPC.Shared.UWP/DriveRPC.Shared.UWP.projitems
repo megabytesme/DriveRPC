@@ -14,6 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\AppearanceService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FirstRunService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SecureStorage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UpdateService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs" />
   </ItemGroup>

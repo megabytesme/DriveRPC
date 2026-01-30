@@ -9,6 +9,8 @@
     <Import_RootNamespace>DriveRPC.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\ISecureStorage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\SecureStorageKeys.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
   </ItemGroup>
 </Project>
