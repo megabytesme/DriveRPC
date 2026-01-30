@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11415.280 d18.0
+VisualStudioVersion = 18.2.11415.280
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UWP_1507", "UWP_1507\UWP_1507.csproj", "{B14A6D70-18A4-40EB-ACDC-28630A629BD4}"
 EndProject
@@ -103,7 +103,6 @@ Global
 		DriveRPC.Shared.UWP\DriveRPC.Shared.UWP.projitems*{b14a6d70-18a4-40eb-acdc-28630a629bd4}*SharedItemsImports = 4
 		DriveRPC.Shared\DriveRPC.Shared.projitems*{b14a6d70-18a4-40eb-acdc-28630a629bd4}*SharedItemsImports = 4
 		DriveRPC.Shared.UWP\DriveRPC.Shared.UWP.projitems*{e47249ae-5371-48e6-a5d6-19571b5adaa6}*SharedItemsImports = 13
-		DriveRPC.Shared\DriveRPC.Shared.projitems*{e47249ae-5371-48e6-a5d6-19571b5adaa6}*SharedItemsImports = 13
 		DriveRPC.Shared\DriveRPC.Shared.projitems*{ec2f8cbf-b49a-49d0-93d1-6cbd5e162f1e}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal

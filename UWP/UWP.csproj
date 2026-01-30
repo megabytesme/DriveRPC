@@ -119,10 +119,37 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainPage.xaml.cs">
-      <DependentUpon>MainPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Views\Win11\AppearancePage_Win11.xaml.cs">
+      <DependentUpon>AppearancePage_Win11.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win11\HomePage_Win11.xaml.cs">
+      <DependentUpon>HomePage_Win11.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win11\SettingsPage_Win11.xaml.cs">
+      <DependentUpon>SettingsPage_Win11.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win10_1709\AppearancePage_Win10_1709.xaml.cs">
+      <DependentUpon>AppearancePage_Win10_1709.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win10_1709\HomePage_Win10_1709.xaml.cs">
+      <DependentUpon>HomePage_Win10_1709.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win10_1709\SettingsPage_Win10_1709.xaml.cs">
+      <DependentUpon>SettingsPage_Win10_1709.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win10_1507\AppearancePage_Win10_1507.xaml.cs">
+      <DependentUpon>AppearancePage_Win10_1507.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win10_1507\HomePage_Win10_1507.xaml.cs">
+      <DependentUpon>HomePage_Win10_1507.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win10_1507\SettingsPage_Win10_1507.xaml.cs">
+      <DependentUpon>SettingsPage_Win10_1507.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win11\ShellPage.xaml.cs">
+      <DependentUpon>ShellPage.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -146,6 +173,58 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Win10_1507.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Win10_1709.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Win11.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win11\AppearancePage_Win11.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win11\HomePage_Win11.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win11\SettingsPage_Win11.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win10_1709\AppearancePage_Win10_1709.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win10_1709\HomePage_Win10_1709.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win10_1709\SettingsPage_Win10_1709.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win10_1507\AppearancePage_Win10_1507.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win10_1507\HomePage_Win10_1507.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win10_1507\SettingsPage_Win10_1507.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win11\ShellPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

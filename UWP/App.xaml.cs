@@ -1,8 +1,13 @@
-﻿using System;
+﻿using DriveRPC.Shared.UWP.Helpers;
+using DriveRPC.Shared.UWP.Models;
+using DriveRPC.Shared.UWP.Services;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -39,6 +44,40 @@ namespace UWP
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+            try
+            {
+                switch (AppearanceService.Current)
+                {
+                    case AppearanceMode.Win11:
+                        this.Resources.MergedDictionaries.Add(
+                            new ResourceDictionary
+                            {
+                                Source = new Uri("ms-appx:///Themes/Win11.xaml")
+                            });
+                        break;
+                    case AppearanceMode.Win10_1709:
+                        this.Resources.MergedDictionaries.Add(
+                            new ResourceDictionary
+                            {
+                                Source = new Uri("ms-appx:///Themes/Win10_1709.xaml")
+                            });
+                        break;
+                    case AppearanceMode.Win10_1507:
+                        this.Resources.MergedDictionaries.Add(
+                            new ResourceDictionary
+                            {
+                                Source = new Uri("ms-appx:///Themes/Win10_1507.xaml")
+                            });
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to load theme resources: {ex.Message}");
+            }
+
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -59,17 +98,94 @@ namespace UWP
                 Window.Current.Content = rootFrame;
             }
 
-            if (e.PrelaunchActivated == false)
+            if (!e.PrelaunchActivated)
             {
                 if (rootFrame.Content == null)
                 {
-                    // When the navigation stack isn't restored navigate to the first page,
-                    // configuring the new page by passing required information as a navigation
-                    // parameter
-                    rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                    if (FirstRunService.IsFirstRun)
+                    {
+                        rootFrame.Navigate(NavigationHelper.GetPageType("OOBE"), e.Arguments);
+                    }
+                    else
+                    {
+                        // When the navigation stack isn't restored navigate to the first page,
+                        // configuring the new page by passing required information as a navigation
+                        // parameter
+                        Type shellType = NavigationHelper.GetPageType("Shell");
+                        rootFrame.Navigate(shellType, e.Arguments);
+                    }
                 }
-                // Ensure the current window is active
                 Window.Current.Activate();
+
+                _ = CheckForUpdatesAtStartup();
+            }
+        }
+
+        private async Task CheckForUpdatesAtStartup()
+        {
+            var updateInfo = await UpdateService.CheckForUpdatesAsync();
+
+            if (updateInfo.IsUpdateAvailable)
+            {
+                await Window.Current.Dispatcher.RunAsync(
+                Windows.UI.Core.CoreDispatcherPriority.Normal,
+                async () =>
+                {
+                    var scrollViewer = new ScrollViewer
+                    {
+                        VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                        MaxHeight = 350
+                    };
+
+                    var panel = new StackPanel();
+
+                    var headerText = new TextBlock
+                    {
+                        Text = $"Version {updateInfo.LatestVersion} is available to download!",
+                        FontWeight = Windows.UI.Text.FontWeights.Bold,
+                        Margin = new Thickness(0, 0, 0, 12)
+                    };
+
+                    var bodyText = new TextBlock
+                    {
+                        Text = updateInfo.Body,
+                        TextWrapping = TextWrapping.Wrap
+                    };
+
+                    panel.Children.Add(headerText);
+                    panel.Children.Add(bodyText);
+                    scrollViewer.Content = panel;
+
+                    var dialog = new ContentDialog
+                    {
+                        Title = "Update Available",
+                        Content = scrollViewer,
+                        PrimaryButtonText = "Download",
+                        CloseButtonText = "Skip",
+                        DefaultButton = ContentDialogButton.Primary
+                    };
+
+                    if (Window.Current.Content is FrameworkElement fe && fe.XamlRoot != null)
+                    {
+                        dialog.XamlRoot = fe.XamlRoot;
+                    }
+
+                    try
+                    {
+                        var result = await dialog.ShowAsync();
+                        if (result == ContentDialogResult.Primary)
+                        {
+                            if (!string.IsNullOrEmpty(updateInfo.ReleaseUrl))
+                            {
+                                await Windows.System.Launcher.LaunchUriAsync(new Uri(updateInfo.ReleaseUrl));
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        Debug.WriteLine("[CheckForUpdatesAtStartup] Dialog failed to show");
+                    }
+                });
             }
         }
 

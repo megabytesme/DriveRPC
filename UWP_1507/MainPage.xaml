@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="UWP_1507.MainPage"
+    x:Class="DriveRPC.Shared.UWP.Views.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:UWP_1507"
@@ -8,7 +8,38 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid>
+    <SplitView x:Name="RootSplitView" DisplayMode="CompactOverlay" IsPaneOpen="False" CompactPaneLength="48" OpenPaneLength="200">
+        <SplitView.Pane>
+            <StackPanel Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
+                <Button x:Name="HamburgerButton" Width="48" Height="48" Click="HamburgerButton_Click" Background="Transparent">
+                    <TextBlock Text="&#xE700;" FontFamily="Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
 
-    </Grid>
+                <ListBox x:Name="NavListBox" SelectionChanged="NavListBox_SelectionChanged" Background="Transparent">
+                    <ListBoxItem Tag="Home">
+                        <StackPanel Orientation="Horizontal" Padding="2">
+                            <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Home" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="Appearance">
+                        <StackPanel Orientation="Horizontal" Padding="2">
+                            <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Appearance" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="Settings">
+                        <StackPanel Orientation="Horizontal" Padding="2">
+                            <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Settings" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+            </StackPanel>
+        </SplitView.Pane>
+
+        <SplitView.Content>
+            <Frame x:Name="ContentFrame" />
+        </SplitView.Content>
+    </SplitView>
 </Page>
