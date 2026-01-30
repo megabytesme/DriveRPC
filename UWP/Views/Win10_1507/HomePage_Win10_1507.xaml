@@ -2,13 +2,104 @@
     x:Class="DriveRPC.Shared.UWP.Views.HomePage_Win10_1507"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:DriveRPC.Shared.UWP.Views"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
+    xmlns:converters="using:DriveRPC.Shared.UWP.Converters"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
+    <Page.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </Page.Resources>
+
     <Grid>
+
+        <StackPanel Padding="20" VerticalAlignment="Top">
+            <TextBlock Text="DriveRPC"
+                       Style="{StaticResource TitleTextBlockStyle}" />
+
+            <TextBlock x:Name="StatusTextBlock"
+                       Text="Status: Unknown"
+                       Style="{StaticResource SubtitleTextBlockStyle}"
+                       Margin="0,4,0,20"/>
+        </StackPanel>
+
+        <Grid VerticalAlignment="Center"
+              HorizontalAlignment="Center"
+              Margin="20,80,20,80">
+
+            <Border Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
+                    Padding="16"
+                    Width="420"
+                    MinHeight="140"
+                    BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Width="96" Height="96">
+                        <Image
+                            Visibility="{x:Bind ViewModel.LargeImage, Converter={StaticResource NullToVisibilityConverter}}"
+                            Source="{Binding ViewModel.LargeImage}"
+                            Stretch="UniformToFill"
+                            Width="96" Height="96"/>
+
+                        <Grid Width="32" Height="32"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Bottom"
+                              Margin="0,0,4,4"
+                              Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}">
+                            <Image
+                                Visibility="{x:Bind ViewModel.SmallImage, Converter={StaticResource NullToVisibilityConverter}}"
+                                Source="{Binding ViewModel.SmallImage}"
+                                Stretch="Uniform"
+                                Width="24" Height="24"
+                                Margin="4"/>
+                        </Grid>
+                    </Grid>
+
+                    <StackPanel Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Margin="12,0,0,0">
+
+                        <TextBlock Text="{x:Bind ViewModel.ActivityName, Mode=OneWay}"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   TextTrimming="CharacterEllipsis"/>
+
+                        <TextBlock Text="{x:Bind ViewModel.ActivityDetails, Mode=OneWay}"
+                                   Margin="0,4,0,0"
+                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                   TextTrimming="CharacterEllipsis"/>
+
+                        <TextBlock Text="{x:Bind ViewModel.ActivityState, Mode=OneWay}"
+                                   Margin="0,2,0,0"
+                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                   TextTrimming="CharacterEllipsis"/>
+
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="0,8,0,0">
+                            <FontIcon Glyph="&#xE7FC;"
+                                      Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                      Margin="0,0,6,0"/>
+                            <TextBlock Text="{x:Bind ViewModel.ElapsedTimeText, Mode=OneWay}"
+                                       Foreground="{ThemeResource SystemControlHighlightAccentBrush}"/>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <CommandBar VerticalAlignment="Bottom">
+            <AppBarButton Icon="Play"
+                          Label="Start RPC"
+                          Click="StartRpc_Click"/>
+            <AppBarButton Icon="Stop"
+                          Label="Stop RPC"
+                          Click="StopRpc_Click"/>
+        </CommandBar>
 
     </Grid>
 </Page>
