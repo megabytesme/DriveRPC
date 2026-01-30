@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\FirstRunService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SecureStorage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UpdateService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\SettingsPageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs" />
   </ItemGroup>
 </Project>

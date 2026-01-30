@@ -12,5 +12,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\ISecureStorage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\SecureStorageKeys.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SettingsViewModel.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Interfaces\" />
   </ItemGroup>
 </Project>
