@@ -9,6 +9,7 @@
     <Import_RootNamespace>DriveRPC.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Models.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IRpcController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ISecureStorage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IUiThread.cs" />
