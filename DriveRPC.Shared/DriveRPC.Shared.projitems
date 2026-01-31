@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\IUiThread.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\SecureStorageKeys.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\NominatimReverseGeocoder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\StatusViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SettingsViewModel.cs" />
   </ItemGroup>
