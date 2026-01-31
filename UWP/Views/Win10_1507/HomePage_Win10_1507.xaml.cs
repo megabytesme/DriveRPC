@@ -29,7 +29,7 @@ namespace DriveRPC.Shared.UWP.Views
             InitializeComponent();
 
             ViewModel = new StatusViewModel(
-                RpcController.Instance,
+                App.RpcController,
                 new UiThread(),
                 App.PresetService,
                 null,

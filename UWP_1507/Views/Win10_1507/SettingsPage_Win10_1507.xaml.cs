@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using UWP_1507;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -25,6 +26,7 @@ namespace DriveRPC.Shared.UWP.Views
     public sealed partial class SettingsPage_Win10_1507 : SettingsPageBase
     {
         public SettingsPage_Win10_1507()
+            : base(App.SecureStorage)
         {
             try
             {

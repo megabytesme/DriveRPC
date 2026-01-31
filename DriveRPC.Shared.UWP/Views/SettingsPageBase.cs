@@ -1,4 +1,5 @@
-﻿using DriveRPC.Shared.UWP.Helpers;
+﻿using DriveRPC.Shared.Services;
+using DriveRPC.Shared.UWP.Helpers;
 using DriveRPC.Shared.UWP.Models;
 using DriveRPC.Shared.UWP.Services;
 using DriveRPC.Shared.ViewModels;
@@ -18,11 +19,11 @@ namespace DriveRPC.Shared.UWP.Views
         protected bool _loading = true;
         protected bool _suppressAppearanceChange;
 
-        protected SettingsPageBase()
+        protected SettingsPageBase(ISecureStorage secureStorage)
         {
             try
             {
-                _vm = new SettingsViewModel(new SecureStorage());
+                _vm = new SettingsViewModel(secureStorage);
             }
             catch (Exception ex)
             {

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 #if WINDOWS_UWP
 using Windows.ApplicationModel;
 #endif
-using ISecureStorage = DriveRPC.Shared.Services.ISecureStorage;
 
 namespace DriveRPC.Shared.ViewModels
 {
