@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\StatusFormatter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Models.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IGeocodingService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IAppearancePresetStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IRpcController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ISecureStorage.cs" />
@@ -18,6 +19,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\SecureStorageKeys.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ActivePresetService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\NominatimGeocodingService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\PresenceUpdateService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\NominatimReverseGeocoder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ILocationService.cs" />

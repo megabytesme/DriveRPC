@@ -17,7 +17,7 @@ namespace DriveRPC.Shared.ViewModels
         private readonly IRpcController _rpc;
         private readonly IAppearancePresetStore _store;
         private readonly ActivePresetService _presetService;
-        private readonly NominatimReverseGeocoder _reverseGeocoder;
+        private readonly IGeocodingService _reverseGeocoder;
 
         private LocationInfo _lastLocation;
         private string _countryFlagAssetKey;
@@ -115,13 +115,14 @@ namespace DriveRPC.Shared.ViewModels
             ILocationService gps,
             IRpcController rpc,
             IAppearancePresetStore store,
-            ActivePresetService presetService)
+            ActivePresetService presetService,
+            IGeocodingService geocoder)
         {
             _gps = gps;
             _rpc = rpc;
             _store = store;
             _presetService = presetService;
-            _reverseGeocoder = new NominatimReverseGeocoder();
+            _reverseGeocoder = geocoder;
 
             _gps.LocationUpdated += (s, e) => LatestGps = BuildSnapshot();
 
@@ -293,7 +294,7 @@ namespace DriveRPC.Shared.ViewModels
 
             if (gps != null)
             {
-                _lastLocation = await _reverseGeocoder.LookupAsync(gps.Latitude, gps.Longitude);
+                _lastLocation = await _reverseGeocoder.ReverseGeocodeAsync(gps.Latitude, gps.Longitude);
                 await EnsureCountryFlagCachedAsync();
             }
 

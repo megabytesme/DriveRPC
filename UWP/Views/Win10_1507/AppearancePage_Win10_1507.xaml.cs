@@ -42,13 +42,14 @@ namespace DriveRPC.Shared.UWP.Views
             var store = new AppearancePresetStore();
             var presetService = App.PresetService;
 
-            ViewModel = new AppearancePageViewModel(previewGps, rpc, store, presetService);
+            ViewModel = new AppearancePageViewModel(previewGps, rpc, store, presetService, App.ReverseGeocoder);
             StatusViewModel = new StatusViewModel(
                 rpc,
                 new UiThread(),
                 presetService,
                 ViewModel,
-                App.GpsService
+                App.GpsService,
+                App.ReverseGeocoder
             );
 
             DataContext = ViewModel;

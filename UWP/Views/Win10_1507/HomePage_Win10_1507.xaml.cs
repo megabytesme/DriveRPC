@@ -33,7 +33,8 @@ namespace DriveRPC.Shared.UWP.Views
                 new UiThread(),
                 App.PresetService,
                 null,
-                App.GpsService
+                App.GpsService,
+                App.ReverseGeocoder
             );
 
             DataContext = ViewModel;

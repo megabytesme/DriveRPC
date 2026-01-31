@@ -17,7 +17,7 @@ namespace DriveRPC.Shared.ViewModels
         private readonly ActivePresetService _presetService;
         private readonly AppearancePageViewModel _appearanceVm;
         private readonly ILocationService _realGps;
-        private readonly NominatimReverseGeocoder _reverseGeocoder;
+        private readonly IGeocodingService _reverseGeocoder;
 
         private LocationInfo _lastLocation;
         private string _countryFlagAssetKey;
@@ -31,14 +31,15 @@ namespace DriveRPC.Shared.ViewModels
             IUiThread uiThread,
             ActivePresetService presetService,
             AppearancePageViewModel appearanceVm,
-            ILocationService realGps)
+            ILocationService realGps,
+            IGeocodingService geocoder)
         {
             _rpc = rpcController;
             _ui = uiThread;
             _presetService = presetService;
             _appearanceVm = appearanceVm;
             _realGps = realGps;
-            _reverseGeocoder = new NominatimReverseGeocoder();
+            _reverseGeocoder = geocoder;
 
             _rpc.PresenceUpdated += OnPresenceUpdated;
 
@@ -70,7 +71,7 @@ namespace DriveRPC.Shared.ViewModels
                 HeadingDegrees = _realGps.HeadingDegrees
             };
 
-            _lastLocation = await _reverseGeocoder.LookupAsync(gps.Latitude, gps.Longitude);
+            _lastLocation = await _reverseGeocoder.ReverseGeocodeAsync(gps.Latitude, gps.Longitude);
             await EnsureCountryFlagCachedAsync();
 
             var formatter = new StatusFormatter(preset, _lastLocation);

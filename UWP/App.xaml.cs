@@ -32,6 +32,7 @@ namespace UWP
         public static ILocationService PreviewGpsService { get; private set; }
         public static ActivePresetService PresetService { get; private set; }
         public static PresenceUpdateService PresenceUpdater { get; private set; }
+        public static IGeocodingService ReverseGeocoder { get; private set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -54,6 +55,7 @@ namespace UWP
             PreviewGpsService = new LocationService();
             PresetService = new ActivePresetService();
             PresenceUpdater = new PresenceUpdateService(GpsService, RpcController.Instance, PresetService);
+            ReverseGeocoder = new NominatimGeocodingService();
 
             try
             {
