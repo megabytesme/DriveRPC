@@ -169,7 +169,7 @@ namespace DriveRPC.Shared.UWP.Views
                     {
                         new Run { Text = "DriveRPC", FontWeight = FontWeights.Bold, FontSize = 18 },
                         new LineBreak(),
-                        new Run { Text = $"Version {_vm.GetAppVersion()} ({_vm.GetAppName()}) {_vm.GetArchitecture()}" },
+                        new Run { Text = $"Version {OSHelper.AppVersion} ({OSHelper.PlatformFamily}) {OSHelper.Architecture}" },
                         new LineBreak(),
                         new LineBreak(),
 

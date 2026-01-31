@@ -1,6 +1,7 @@
 ﻿using DriveRPC.Shared.Models;
 using DriveRPC.Shared.Services;
 using System.Threading.Tasks;
+using ISecureStorage = DriveRPC.Shared.Services.ISecureStorage;
 #if WINDOWS_UWP
 using Windows.ApplicationModel;
 #endif
@@ -36,35 +37,6 @@ namespace DriveRPC.Shared.ViewModels
         {
             UserToken = null;
             await _secureStorage.DeleteAsync(SecureStorageKeys.UserToken);
-        }
-
-        public string GetAppName()
-        {
-#if UWP1709
-            return "1709_UWP";
-#elif UWP1507
-            return "1507_UWP";
-#endif
-            return "Unknown"; // need MAUI equivalent
-        }
-
-        public string GetAppVersion()
-        {
-#if WINDOWS_UWP
-            var v = Package.Current.Id.Version;
-            return $"{v.Major}.{v.Minor}.{v.Build}.{v.Revision}";
-#else
-            return "Unknown"; // need MAUI equivalent
-#endif
-        }
-
-        public string GetArchitecture()
-        {
-#if WINDOWS_UWP
-            return Package.Current.Id.Architecture.ToString().ToLower();
-#else
-            return "Unknown"; // need MAUI equivalent
-#endif
         }
     }
 }
