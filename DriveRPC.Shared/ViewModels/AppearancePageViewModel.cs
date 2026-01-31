@@ -238,6 +238,9 @@ namespace DriveRPC.Shared.ViewModels
             if (SelectedPreset == null || EditingPreset == null)
                 return;
 
+            EditingPreset.SeatCount = Math.Max(1, EditingPreset.SeatCount);
+            EditingPreset.SeatsUsed = Math.Max(1, Math.Min(EditingPreset.SeatsUsed, EditingPreset.SeatCount));
+
             SelectedPreset.CopyFrom(EditingPreset);
 
             _presetService.SetActivePreset(SelectedPreset);

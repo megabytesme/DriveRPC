@@ -222,7 +222,9 @@ namespace DriveRPC.Shared.Helpers
                 Status = "online",
                 Type = "0",
                 Platform = "desktop",
-                TimestampsStart = startTimestamp.ToString()
+                TimestampsStart = startTimestamp.ToString(),
+                PartyMaxSize = _preset.ShowParty ? _preset.SeatCount.ToString() : null,
+                PartyCurrentSize = _preset.ShowParty ? _preset.SeatsUsed.ToString() : null
             };
         }
     }

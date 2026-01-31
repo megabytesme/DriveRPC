@@ -108,6 +108,17 @@ namespace DriveRPC.Shared.ViewModels
             }
         }
 
+        public string PartyText
+        {
+            get
+            {
+                if (PartySizeCurrent == null || PartySizeMax == null)
+                    return null;
+
+                return $"{PartySizeCurrent} of {PartySizeMax}";
+            }
+        }
+
         public string LargeImageUrl => BuildImageUrl(LargeImageKey);
         public string SmallImageUrl => BuildImageUrl(SmallImageKey);
 
@@ -174,6 +185,7 @@ namespace DriveRPC.Shared.ViewModels
                 OnPropertyChanged(nameof(PartyId));
                 OnPropertyChanged(nameof(PartySizeCurrent));
                 OnPropertyChanged(nameof(PartySizeMax));
+                OnPropertyChanged(nameof(PartyText));
                 OnPropertyChanged(nameof(Buttons));
                 OnPropertyChanged(nameof(ButtonUrls));
 

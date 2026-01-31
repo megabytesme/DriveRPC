@@ -17,6 +17,10 @@ namespace DriveRPC.Shared.Models
         public bool ShowCompass { get; set; }
         public SpeedUnit SpeedUnit { get; set; } = SpeedUnit.Auto;
 
+        public int SeatCount { get; set; } = 1;
+        public int SeatsUsed { get; set; } = 1;
+        public bool ShowParty { get; set; } = false;
+
         public string CachedLargeImageKey { get; set; }
         public string CachedSmallImageKey { get; set; }
 
@@ -34,6 +38,9 @@ namespace DriveRPC.Shared.Models
                 LocationMode = this.LocationMode,
                 ShowCompass = this.ShowCompass,
                 SpeedUnit = this.SpeedUnit,
+                SeatCount = this.SeatCount,
+                SeatsUsed = this.SeatsUsed,
+                ShowParty = this.ShowParty,
                 CachedLargeImageKey = this.CachedLargeImageKey,
                 CachedSmallImageKey = this.CachedSmallImageKey
             };
@@ -53,6 +60,9 @@ namespace DriveRPC.Shared.Models
             LocationMode = other.LocationMode;
             ShowCompass = other.ShowCompass;
             SpeedUnit = other.SpeedUnit;
+            SeatCount = other.SeatCount;
+            SeatsUsed = other.SeatsUsed;
+            ShowParty = other.ShowParty;
             CachedLargeImageKey = other.CachedLargeImageKey;
             CachedSmallImageKey = other.CachedSmallImageKey;
         }

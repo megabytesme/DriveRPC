@@ -45,6 +45,20 @@
             <TextBox Header="Car image text"
                      Text="{x:Bind ViewModel.EditingPreset.CarImageText, Mode=TwoWay}"/>
 
+            <ToggleSwitch Header="Show party info"
+              x:Name="ShowPartyToggle"
+              IsOn="{x:Bind ViewModel.EditingPreset.ShowParty, Mode=TwoWay}" />
+
+            <TextBox Header="Total seats"
+                     x:Name="SeatCountBox"
+                     InputScope="Number"
+                     Text="{x:Bind ViewModel.EditingPreset.SeatCount, Mode=TwoWay}" />
+
+            <TextBox Header="Seats used"
+                     x:Name="SeatsUsedBox"
+                     InputScope="Number"
+                     Text="{x:Bind ViewModel.EditingPreset.SeatsUsed, Mode=TwoWay}" />
+
             <ComboBox x:Name="SpeedModeCombo"
                       Header="Speed detail"
                       ItemsSource="{x:Bind ViewModel.SpeedModes}"/>
