@@ -1,4 +1,5 @@
-﻿using DriveRPC.Shared.UWP.Helpers;
+﻿using DriveRPC.Shared.Services;
+using DriveRPC.Shared.UWP.Helpers;
 using DriveRPC.Shared.UWP.Models;
 using DriveRPC.Shared.UWP.Services;
 using System;
@@ -27,6 +28,10 @@ namespace UWP
     /// </summary>
     sealed partial class App : Application
     {
+        public static LocationService GpsService { get; private set; }
+        public static ActivePresetService PresetService { get; private set; }
+        public static PresenceUpdateService PresenceUpdater { get; private set; }
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -44,6 +49,10 @@ namespace UWP
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+            GpsService = new LocationService();
+            PresetService = new ActivePresetService();
+            PresenceUpdater = new PresenceUpdateService(GpsService, RpcController.Instance, PresetService);
+
             try
             {
                 switch (AppearanceService.Current)

@@ -14,12 +14,39 @@ namespace DriveRPC.Shared.UWP.Services
 {
     public class RpcController : IRpcController
     {
-        protected readonly SettingsViewModel _settingsVm;
+        private readonly ISecureStorage _secureStorage;
+        private readonly SettingsViewModel _settingsVm;
 
         private static readonly Lazy<RpcController> _instance =
             new Lazy<RpcController>(() => new RpcController(new SecureStorage()));
 
         public static RpcController Instance => _instance.Value;
+
+        private DiscordGatewayClient _client;
+        private IWebSocketClient _socket;
+
+        private static bool _sessionActive = false;
+
+        public bool IsRunning { get; private set; }
+        public string StatusText { get; private set; } = "Idle";
+        public Presence CurrentPresence { get; private set; }
+
+        public event Action PresenceUpdated;
+
+        private const string AppId = "1466639317328990291";
+
+        private long? _activityStartTimestamp;
+
+        public long ActivityStartTimestamp
+        {
+            get
+            {
+                if (_activityStartTimestamp == null)
+                    _activityStartTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+                return _activityStartTimestamp.Value;
+            }
+        }
 
         private RpcController(ISecureStorage secureStorage)
         {
@@ -31,22 +58,19 @@ namespace DriveRPC.Shared.UWP.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("[SettingsPageBase] Constructor FAILED: " + ex);
+                Debug.WriteLine("[RpcController] SettingsViewModel init failed: " + ex);
                 throw;
             }
         }
 
-        private readonly ISecureStorage _secureStorage;
-        private DiscordGatewayClient _client;
-        private IWebSocketClient _socket;
+        private async Task EnsureActiveAsync()
+        {
+            if (IsRunning && _client != null && _socket != null &&
+                _socket.State == RpcWebSocketState.Open)
+                return;
 
-        public bool IsRunning { get; private set; }
-        public string StatusText { get; private set; } = "Idle";
-
-        public Presence CurrentPresence { get; private set; }
-        public event Action PresenceUpdated;
-
-        private const string AppId = "1466639317328990291";
+            await StartAsync();
+        }
 
         public async Task StartAsync()
         {
@@ -78,7 +102,6 @@ namespace DriveRPC.Shared.UWP.Services
             };
 
             _client = new DiscordGatewayClient(options, _socket);
-
             await _client.ConnectAsync();
 
 #if UWP1507
@@ -86,32 +109,28 @@ namespace DriveRPC.Shared.UWP.Services
 #else
             var rawLargeImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Icon/DriveRPC-3D.png";
 #endif
-            var rawSmallImg = string.Empty;
 
-            if (OSHelper.IsWindows11)
-            {
-                rawSmallImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2021).png";
-            }
-            else
-            {
-                rawSmallImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2012).png";
-            }
+            var rawSmallImg = OSHelper.IsWindows11
+                ? "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2021).png"
+                : "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2012).png";
 
             var proxiedLargeImage = await DiscordGatewayClient.ResolveExternalImageAsync(rawLargeImg, options.ApplicationId, options.Token);
             var proxiedSmallImage = await DiscordGatewayClient.ResolveExternalImageAsync(rawSmallImg, options.ApplicationId, options.Token);
+
+            _activityStartTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             var config = new RpcConfig
             {
                 Name = "Driving",
                 Details = "Sharing my drive on Discord",
-                State = " Using DriveRPC for Windows " + $"{_settingsVm.GetAppVersion()} ({_settingsVm.GetAppName()}) {_settingsVm.GetArchitecture()}",
+                State = $" Using DriveRPC for Windows {_settingsVm.GetAppVersion()} ({_settingsVm.GetAppName()}) {_settingsVm.GetArchitecture()}",
                 Status = "online",
                 Type = "0",
                 Platform = "desktop",
                 LargeImg = proxiedLargeImage,
                 LargeText = "DriveRPC",
                 SmallImg = proxiedSmallImage,
-                SmallText = OSHelper.IsWindows11? "Windows 11": "Windows 10",
+                SmallText = OSHelper.IsWindows11 ? "Windows 11" : "Windows 10",
             };
 
             var presence = RpcHelper.BuildPresence(config, AppId);
@@ -121,7 +140,6 @@ namespace DriveRPC.Shared.UWP.Services
 
             IsRunning = true;
             StatusText = "RPC running.";
-
             PresenceUpdated?.Invoke();
         }
 
@@ -146,6 +164,46 @@ namespace DriveRPC.Shared.UWP.Services
             CurrentPresence = null;
 
             PresenceUpdated?.Invoke();
+        }
+
+        public async Task UpdatePresenceAsync(RpcConfig config)
+        {
+            try
+            {
+                await EnsureActiveAsync();
+
+                if (!IsRunning || _client == null)
+                    return;
+
+                if (_activityStartTimestamp == null)
+                    _activityStartTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+                var presence = RpcHelper.BuildPresence(config, AppId);
+                CurrentPresence = presence;
+
+                await _client.UpdatePresenceAsync(config);
+                PresenceUpdated?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                IsRunning = false;
+                StatusText = $"RPC error: {ex.HResult:X}";
+                PresenceUpdated?.Invoke();
+            }
+        }
+
+        public async Task<string> CacheImageAsync(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return null;
+
+            await EnsureActiveAsync();
+
+            var token = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
+            if (string.IsNullOrWhiteSpace(token))
+                return null;
+
+            return await DiscordGatewayClient.ResolveExternalImageAsync(url, AppId, token);
         }
     }
 }

@@ -94,9 +94,21 @@ namespace DriveRPC.Shared.UWP.Services
             if (_state != RpcWebSocketState.Open)
                 return;
 
-            var text = System.Text.Encoding.UTF8.GetString(buffer.Array, 0, buffer.Count);
-            _writer.WriteString(text);
-            await _writer.StoreAsync();
+            try
+            {
+                var text = System.Text.Encoding.UTF8.GetString(buffer.Array, 0, buffer.Count);
+                _writer.WriteString(text);
+                await _writer.StoreAsync();
+            }
+            catch (Exception)
+            {
+                _state = RpcWebSocketState.Closed;
+
+                try { _writer?.DetachStream(); } catch { }
+                try { _socket?.Dispose(); } catch { }
+
+                throw;
+            }
         }
 
         public async Task CloseAsync(
