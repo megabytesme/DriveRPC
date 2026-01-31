@@ -130,6 +130,7 @@ namespace DriveRPC.Shared.ViewModels
             {
                 ReplayPosition = t;
                 OnPropertyChanged(nameof(ReplayDuration));
+                OnPropertyChanged(nameof(ReplayTimeText));
             };
         }
 
@@ -381,7 +382,7 @@ namespace DriveRPC.Shared.ViewModels
 
             var previewStream = new MemoryStream(ReplayBuffer.ToArray());
             await _gps.StartReplayAsync(previewStream);
-            OnPropertyChanged(nameof(IsReplaying));
+            OnPropertyChanged(nameof(ReplayTimeText));
         }
 
         public bool IsReplaying => _gps.IsReplaying;
@@ -390,18 +391,38 @@ namespace DriveRPC.Shared.ViewModels
         {
             _gps.PauseReplay();
             OnPropertyChanged(nameof(IsReplaying));
+            OnPropertyChanged(nameof(ReplayTimeText));
         }
 
         public void ResumeReplay()
         {
             _gps.ResumeReplay();
             OnPropertyChanged(nameof(IsReplaying));
+            OnPropertyChanged(nameof(ReplayTimeText));
         }
 
-        public void SeekReplay(double progress0to1) => _gps.SeekReplay(progress0to1);
+        public void SeekReplay(double progress0to1)
+        {
+            _gps.SeekReplay(progress0to1);
+            OnPropertyChanged(nameof(ReplayTimeText));
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        public string ReplayTimeText
+        {
+            get
+            {
+                if (ReplayDuration.TotalSeconds <= 0)
+                    return "00:00 / 00:00";
+
+                var current = ReplayPosition;
+                var total = ReplayDuration;
+
+                return $"{(int)current.TotalMinutes:00}:{current.Seconds:00} / {(int)total.TotalMinutes:00}:{total.Seconds:00}";
+            }
+        }
     }
 }
