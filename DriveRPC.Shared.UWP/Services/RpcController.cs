@@ -4,6 +4,7 @@ using DriveRPC.Shared.UWP.Helpers;
 using DriveRPC.Shared.ViewModels;
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using UserPresenceRPC.Discord.Net.Interfaces;
 using UserPresenceRPC.Discord.Net.Logic;
@@ -155,7 +156,7 @@ namespace DriveRPC.Shared.UWP.Services
                 await _socket.CloseAsync(
                     RpcWebSocketCloseStatus.NormalClosure,
                     "User stopped RPC",
-                    default
+                    CancellationToken.None
                 );
             }
 

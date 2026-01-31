@@ -138,7 +138,11 @@ namespace DriveRPC.Shared.UWP.Services
                 }
             }
 
+#if UWP1507
+            _accelerometer = Accelerometer.GetDefault();
+#else
             _accelerometer = Accelerometer.GetDefault(AccelerometerReadingType.Linear);
+#endif
             if (_accelerometer != null)
             {
                 uint reportInterval =

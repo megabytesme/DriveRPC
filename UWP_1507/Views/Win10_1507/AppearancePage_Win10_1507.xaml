@@ -18,8 +18,9 @@
         <StackPanel Grid.Column="0" Padding="12">
             <TextBlock Text="Presets"
                        Style="{StaticResource SubtitleTextBlockStyle}"/>
-            <ListView ItemsSource="{x:Bind ViewModel.Presets}"
-                      SelectedItem="{x:Bind ViewModel.SelectedPreset, Mode=TwoWay}">
+
+            <ListView x:Name="PresetList"
+                      ItemsSource="{x:Bind ViewModel.Presets}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="models:AppearancePreset">
                         <TextBlock Text="{x:Bind Name}"/>
@@ -33,7 +34,8 @@
             </StackPanel>
         </StackPanel>
 
-        <StackPanel Grid.Column="1" Padding="12" Spacing="12">
+        <StackPanel Grid.Column="1" Padding="12">
+
             <TextBox Header="Car name"
                      Text="{x:Bind ViewModel.EditingPreset.CarName, Mode=TwoWay}"/>
 
@@ -43,26 +45,24 @@
             <TextBox Header="Car image text"
                      Text="{x:Bind ViewModel.EditingPreset.CarImageText, Mode=TwoWay}"/>
 
-            <ComboBox Header="Speed detail"
-                      ItemsSource="{x:Bind ViewModel.SpeedModes}"
-                      SelectedItem="{x:Bind ViewModel.EditingPreset.SpeedMode, Mode=TwoWay}"/>
+            <ComboBox x:Name="SpeedModeCombo"
+                      Header="Speed detail"
+                      ItemsSource="{x:Bind ViewModel.SpeedModes}"/>
 
-            <ComboBox Header="Location detail"
-                      ItemsSource="{x:Bind ViewModel.LocationModes}"
-                      SelectedItem="{x:Bind ViewModel.EditingPreset.LocationMode, Mode=TwoWay}"/>
+            <ComboBox x:Name="LocationModeCombo"
+                      Header="Location detail"
+                      ItemsSource="{x:Bind ViewModel.LocationModes}"/>
 
             <ToggleSwitch Header="Show compass"
                           IsOn="{x:Bind ViewModel.EditingPreset.ShowCompass, Mode=TwoWay}"/>
 
-            <ComboBox Header="GPS source"
-                      ItemsSource="{x:Bind ViewModel.GpsSources}"
-                      SelectedItem="{x:Bind ViewModel.SelectedGpsSource, Mode=TwoWay}"/>
+            <ComboBox x:Name="GpsSourceCombo"
+                      Header="GPS source"
+                      ItemsSource="{x:Bind ViewModel.GpsSources}"/>
 
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-                <Button Content="⏸"
-                        Click="PauseReplay_Click"/>
-                <Button Content="▶"
-                        Click="ResumeReplay_Click"/>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <Button Content="⏸" Click="PauseReplay_Click"/>
+                <Button Content="▶" Click="ResumeReplay_Click"/>
 
                 <Slider x:Name="ReplaySlider"
                         Minimum="0"
@@ -71,9 +71,9 @@
                         ValueChanged="ReplaySlider_ValueChanged"
                         Width="100" />
 
-                <ComboBox Width="80"
-                          ItemsSource="{x:Bind ViewModel.ReplaySpeeds}"
-                          SelectedItem="{x:Bind ViewModel.SelectedReplaySpeed, Mode=TwoWay}"/>
+                <ComboBox x:Name="ReplaySpeedCombo"
+                          Width="80"
+                          ItemsSource="{x:Bind ViewModel.ReplaySpeeds}"/>
             </StackPanel>
 
             <Border Margin="0,12,0,0"

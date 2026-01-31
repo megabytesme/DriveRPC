@@ -1,9 +1,12 @@
 ﻿using DriveRPC.Shared.UWP.Services;
 using DriveRPC.Shared.ViewModels;
+using DriveRPC.Shared.Models;
 using System;
+using System.Diagnostics;
 using System.IO;
 using UWP;
 using Windows.Storage.Pickers;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -17,6 +20,8 @@ namespace DriveRPC.Shared.UWP.Views
     /// </summary>
     public sealed partial class AppearancePage_Win10_1507 : AppearancePageBase
     {
+        private bool _initialized;
+
         public AppearancePage_Win10_1507()
         {
             InitializeComponent();
@@ -30,6 +35,62 @@ namespace DriveRPC.Shared.UWP.Views
             DataContext = ViewModel;
 
             ViewModel.RequestReplayFile += OnRequestReplayFile;
+
+            Loaded += OnLoaded;
+        }
+
+        private async void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            if (_initialized)
+                return;
+
+            _initialized = true;
+
+            await ViewModel.InitializeAsync();
+
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                WireComboBoxes();
+            });
+        }
+
+        private void WireComboBoxes()
+        {
+            PresetList.SelectionChanged += (s, ev) =>
+            {
+                ViewModel.SelectedPreset = PresetList.SelectedItem as AppearancePreset;
+            };
+
+            if (ViewModel.EditingPreset != null)
+            {
+                SpeedModeCombo.SelectedItem = ViewModel.EditingPreset.SpeedMode;
+                SpeedModeCombo.SelectionChanged += (s, ev) =>
+                {
+                    if (SpeedModeCombo.SelectedItem is SpeedLodMode mode)
+                        ViewModel.EditingPreset.SpeedMode = mode;
+                };
+
+                LocationModeCombo.SelectedItem = ViewModel.EditingPreset.LocationMode;
+                LocationModeCombo.SelectionChanged += (s, ev) =>
+                {
+                    if (LocationModeCombo.SelectedItem is LocationLodMode mode)
+                        ViewModel.EditingPreset.LocationMode = mode;
+                };
+            }
+
+            GpsSourceCombo.SelectedItem = ViewModel.SelectedGpsSource;
+            GpsSourceCombo.SelectionChanged += (s, ev) =>
+            {
+                if (GpsSourceCombo.SelectedItem is GpsSource src)
+                    ViewModel.SelectedGpsSource = src;
+            };
+
+            ReplaySpeedCombo.SelectedItem = ViewModel.SelectedReplaySpeed;
+            ReplaySpeedCombo.SelectionChanged += (s, ev) =>
+            {
+                if (ReplaySpeedCombo.SelectedItem is double speed)
+                    ViewModel.SelectedReplaySpeed = speed;
+            };
         }
 
         private async void OnRequestReplayFile(object sender, EventArgs e)

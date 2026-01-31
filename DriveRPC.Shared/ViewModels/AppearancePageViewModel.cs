@@ -127,8 +127,6 @@ namespace DriveRPC.Shared.ViewModels
                 ReplayPosition = t;
                 OnPropertyChanged(nameof(ReplayDuration));
             };
-
-            _ = LoadPresetsAsync();
         }
 
         private GpsSnapshot BuildSnapshot()
@@ -141,6 +139,11 @@ namespace DriveRPC.Shared.ViewModels
                 SpeedMetersPerSecond = _gps.SpeedMetersPerSecond,
                 HeadingDegrees = _gps.HeadingDegrees
             };
+        }
+
+        public async Task InitializeAsync()
+        {
+            await LoadPresetsAsync();
         }
 
         private async Task LoadPresetsAsync()
