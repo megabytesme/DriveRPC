@@ -1,4 +1,5 @@
-﻿using DriveRPC.Shared.UWP.Services;
+﻿using DriveRPC.Shared.Services;
+using DriveRPC.Shared.UWP.Services;
 using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
