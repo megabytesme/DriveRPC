@@ -109,6 +109,19 @@
                               Margin="0,0,0,8"
                               IsOn="{x:Bind ViewModel.EditingPreset.ShowCompass, Mode=TwoWay}"/>
 
+                <TextBlock Text="Location data © OpenStreetMap contributors, via Nominatim"
+                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                           FontSize="12"
+                           Margin="0,12,0,0"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Left"/>
+
+                <HyperlinkButton Content="https://nominatim.openstreetmap.org"
+                                 NavigateUri="https://nominatim.openstreetmap.org"
+                                 Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                 FontSize="12"
+                                 Margin="0,4,0,0"
+                                 HorizontalAlignment="Left"/>
             </StackPanel>
         </ScrollViewer>
 
