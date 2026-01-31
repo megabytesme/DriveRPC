@@ -356,7 +356,10 @@ namespace DriveRPC.Shared.ViewModels
             if (SelectedGpsSource == GpsSource.Live)
             {
                 if (_gps.IsReplaying)
+                {
                     _gps.StopReplay();
+                    OnPropertyChanged(nameof(IsReplaying));
+                }
 
                 if (_gps.IsListening)
                     _gps.StopListening();
@@ -378,10 +381,23 @@ namespace DriveRPC.Shared.ViewModels
 
             var previewStream = new MemoryStream(ReplayBuffer.ToArray());
             await _gps.StartReplayAsync(previewStream);
+            OnPropertyChanged(nameof(IsReplaying));
         }
 
-        public void PauseReplay() => _gps.PauseReplay();
-        public void ResumeReplay() => _gps.ResumeReplay();
+        public bool IsReplaying => _gps.IsReplaying;
+
+        public void PauseReplay()
+        {
+            _gps.PauseReplay();
+            OnPropertyChanged(nameof(IsReplaying));
+        }
+
+        public void ResumeReplay()
+        {
+            _gps.ResumeReplay();
+            OnPropertyChanged(nameof(IsReplaying));
+        }
+
         public void SeekReplay(double progress0to1) => _gps.SeekReplay(progress0to1);
 
         public event PropertyChangedEventHandler PropertyChanged;

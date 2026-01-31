@@ -35,9 +35,17 @@ namespace DriveRPC.Shared.UWP.Services
         public bool IsRecording => _recorder.IsRecording;
         public event EventHandler<TimeSpan> RecordingTimerTick;
 
-        public void PauseReplay() => _recorder.Pause();
+        public void PauseReplay()
+        {
+            _recorder.Pause();
+            _isReplaying = false;
+        }
 
-        public void ResumeReplay() => _recorder.Resume();
+        public void ResumeReplay()
+        {
+            _recorder.Resume();
+            _isReplaying = true;
+        }
 
         public void SetReplaySpeed(double speed) => _recorder.SetSpeed(speed);
 
