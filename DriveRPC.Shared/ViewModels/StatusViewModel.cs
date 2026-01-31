@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using UserPresenceRPC.Discord.Net.Models;
 
@@ -12,6 +13,8 @@ namespace DriveRPC.Shared.ViewModels
         private readonly IRpcController _rpc;
         private readonly IUiThread _ui;
 
+        private const string AppId = "1466639317328990291";
+
         public StatusViewModel(IRpcController rpcController, IUiThread uiThread)
         {
             _rpc = rpcController;
@@ -20,38 +23,15 @@ namespace DriveRPC.Shared.ViewModels
             _rpc.PresenceUpdated += OnPresenceUpdated;
 
             _ui.StartRepeatingTimer(TimeSpan.FromSeconds(1),
-                () => OnPropertyChanged("ElapsedTimeText"));
+                () => OnPropertyChanged(nameof(ElapsedTimeText)));
         }
 
-        public bool IsRunning { get { return _rpc.IsRunning; } }
-        public string StatusText { get { return _rpc.StatusText; } }
+        public bool IsRunning => _rpc.IsRunning;
+        public string StatusText => _rpc.StatusText;
 
-        public string PresenceStatus
-        {
-            get
-            {
-                var p = _rpc.CurrentPresence;
-                return p != null ? p.Status : null;
-            }
-        }
-
-        public bool? PresenceAfk
-        {
-            get
-            {
-                var p = _rpc.CurrentPresence;
-                return p != null ? (bool?)p.Afk : null;
-            }
-        }
-
-        public long? PresenceSince
-        {
-            get
-            {
-                var p = _rpc.CurrentPresence;
-                return p != null ? p.Since : null;
-            }
-        }
+        public string PresenceStatus => _rpc.CurrentPresence?.Status;
+        public bool? PresenceAfk => _rpc.CurrentPresence?.Afk;
+        public long? PresenceSince => _rpc.CurrentPresence?.Since;
 
         private Activity PrimaryActivity
         {
@@ -65,45 +45,31 @@ namespace DriveRPC.Shared.ViewModels
             }
         }
 
-        public string ActivityName { get { return PrimaryActivity != null ? PrimaryActivity.Name : null; } }
-        public string ActivityState { get { return PrimaryActivity != null ? PrimaryActivity.State : null; } }
-        public string ActivityDetails { get { return PrimaryActivity != null ? PrimaryActivity.Details : null; } }
-        public int? ActivityType { get { return PrimaryActivity != null ? (int?)PrimaryActivity.Type : null; } }
-        public string ActivityApplicationId { get { return PrimaryActivity != null ? PrimaryActivity.ApplicationId : null; } }
-        public string ActivityUrl { get { return PrimaryActivity != null ? PrimaryActivity.Url : null; } }
-        public string ActivityPlatform { get { return PrimaryActivity != null ? PrimaryActivity.Platform : null; } }
+        public string ActivityName => PrimaryActivity?.Name;
+        public string ActivityState => PrimaryActivity?.State;
+        public string ActivityDetails => PrimaryActivity?.Details;
+        public int? ActivityType => PrimaryActivity != null ? (int?)PrimaryActivity.Type : null;
+        public string ActivityApplicationId => PrimaryActivity?.ApplicationId;
+        public string ActivityUrl => PrimaryActivity?.Url;
+        public string ActivityPlatform => PrimaryActivity?.Platform;
 
-        public long? ActivityStartTimestamp
-        {
-            get
-            {
-                var a = PrimaryActivity;
-                return a != null && a.Timestamps != null ? a.Timestamps.Start : null;
-            }
-        }
+        public long? ActivityStartTimestamp => PrimaryActivity?.Timestamps?.Start;
+        public long? ActivityEndTimestamp => PrimaryActivity?.Timestamps?.End;
 
-        public long? ActivityEndTimestamp
-        {
-            get
-            {
-                var a = PrimaryActivity;
-                return a != null && a.Timestamps != null ? a.Timestamps.End : null;
-            }
-        }
+        private string LargeImageKey => PrimaryActivity?.Assets?.LargeImage;
+        private string SmallImageKey => PrimaryActivity?.Assets?.SmallImage;
 
-        public string LargeImage { get { return PrimaryActivity != null && PrimaryActivity.Assets != null ? PrimaryActivity.Assets.LargeImage : null; } }
-        public string LargeText { get { return PrimaryActivity != null && PrimaryActivity.Assets != null ? PrimaryActivity.Assets.LargeText : null; } }
-        public string SmallImage { get { return PrimaryActivity != null && PrimaryActivity.Assets != null ? PrimaryActivity.Assets.SmallImage : null; } }
-        public string SmallText { get { return PrimaryActivity != null && PrimaryActivity.Assets != null ? PrimaryActivity.Assets.SmallText : null; } }
+        public string LargeText => PrimaryActivity?.Assets?.LargeText;
+        public string SmallText => PrimaryActivity?.Assets?.SmallText;
 
-        public string PartyId { get { return PrimaryActivity != null && PrimaryActivity.Party != null ? PrimaryActivity.Party.Id : null; } }
+        public string PartyId => PrimaryActivity?.Party?.Id;
 
         public int? PartySizeCurrent
         {
             get
             {
                 var a = PrimaryActivity;
-                if (a == null || a.Party == null || a.Party.Size == null || a.Party.Size.Length == 0)
+                if (a?.Party?.Size == null || a.Party.Size.Length == 0)
                     return null;
                 return a.Party.Size[0];
             }
@@ -114,14 +80,14 @@ namespace DriveRPC.Shared.ViewModels
             get
             {
                 var a = PrimaryActivity;
-                if (a == null || a.Party == null || a.Party.Size == null || a.Party.Size.Length < 2)
+                if (a?.Party?.Size == null || a.Party.Size.Length < 2)
                     return null;
                 return a.Party.Size[1];
             }
         }
 
-        public IList<string> Buttons { get { return PrimaryActivity != null ? PrimaryActivity.Buttons : null; } }
-        public IList<string> ButtonUrls { get { return PrimaryActivity != null && PrimaryActivity.Metadata != null ? PrimaryActivity.Metadata.ButtonUrls : null; } }
+        public IList<string> Buttons => PrimaryActivity?.Buttons;
+        public IList<string> ButtonUrls => PrimaryActivity?.Metadata?.ButtonUrls;
 
         public string ElapsedTimeText
         {
@@ -138,8 +104,35 @@ namespace DriveRPC.Shared.ViewModels
                 if (elapsed.TotalSeconds < 0)
                     return null;
 
-                return string.Format("{0}:{1:00}", (int)elapsed.TotalMinutes, elapsed.Seconds);
+                return $"{(int)elapsed.TotalMinutes}:{elapsed.Seconds:00}";
             }
+        }
+
+        public string LargeImageUrl => BuildImageUrl(LargeImageKey);
+        public string SmallImageUrl => BuildImageUrl(SmallImageKey);
+
+        private string BuildImageUrl(string assetKey)
+        {
+            if (string.IsNullOrWhiteSpace(assetKey))
+                return null;
+
+            if (assetKey.StartsWith("mp:external/", StringComparison.OrdinalIgnoreCase))
+            {
+                var parts = assetKey.Split(new[] { "/https/" }, StringSplitOptions.None);
+                if (parts.Length == 2)
+                {
+                    var encodedUrl = parts[1];
+
+                    var decodedOnce = Uri.UnescapeDataString(encodedUrl);
+                    var decodedTwice = Uri.UnescapeDataString(decodedOnce);
+
+                    return "https://" + decodedTwice;
+                }
+
+                return $"https://cdn.discordapp.com/app-assets/{AppId}/{assetKey}";
+            }
+
+            return $"https://cdn.discordapp.com/app-assets/{AppId}/{assetKey}.png";
         }
 
         public Task StartAsync()
@@ -156,40 +149,43 @@ namespace DriveRPC.Shared.ViewModels
         {
             _ui.Run(() =>
             {
-                OnPropertyChanged("IsRunning");
-                OnPropertyChanged("StatusText");
-                OnPropertyChanged("PresenceStatus");
-                OnPropertyChanged("PresenceAfk");
-                OnPropertyChanged("PresenceSince");
-                OnPropertyChanged("ActivityName");
-                OnPropertyChanged("ActivityState");
-                OnPropertyChanged("ActivityDetails");
-                OnPropertyChanged("ActivityType");
-                OnPropertyChanged("ActivityApplicationId");
-                OnPropertyChanged("ActivityUrl");
-                OnPropertyChanged("ActivityPlatform");
-                OnPropertyChanged("ActivityStartTimestamp");
-                OnPropertyChanged("ActivityEndTimestamp");
-                OnPropertyChanged("LargeImage");
-                OnPropertyChanged("LargeText");
-                OnPropertyChanged("SmallImage");
-                OnPropertyChanged("SmallText");
-                OnPropertyChanged("PartyId");
-                OnPropertyChanged("PartySizeCurrent");
-                OnPropertyChanged("PartySizeMax");
-                OnPropertyChanged("Buttons");
-                OnPropertyChanged("ButtonUrls");
-                OnPropertyChanged("ElapsedTimeText");
+                OnPropertyChanged(nameof(IsRunning));
+                OnPropertyChanged(nameof(StatusText));
+
+                OnPropertyChanged(nameof(PresenceStatus));
+                OnPropertyChanged(nameof(PresenceAfk));
+                OnPropertyChanged(nameof(PresenceSince));
+
+                OnPropertyChanged(nameof(ActivityName));
+                OnPropertyChanged(nameof(ActivityState));
+                OnPropertyChanged(nameof(ActivityDetails));
+                OnPropertyChanged(nameof(ActivityType));
+                OnPropertyChanged(nameof(ActivityApplicationId));
+                OnPropertyChanged(nameof(ActivityUrl));
+                OnPropertyChanged(nameof(ActivityPlatform));
+                OnPropertyChanged(nameof(ActivityStartTimestamp));
+                OnPropertyChanged(nameof(ActivityEndTimestamp));
+
+                OnPropertyChanged(nameof(LargeImageUrl));
+                OnPropertyChanged(nameof(LargeText));
+                OnPropertyChanged(nameof(SmallImageUrl));
+                OnPropertyChanged(nameof(SmallText));
+
+                OnPropertyChanged(nameof(PartyId));
+                OnPropertyChanged(nameof(PartySizeCurrent));
+                OnPropertyChanged(nameof(PartySizeMax));
+                OnPropertyChanged(nameof(Buttons));
+                OnPropertyChanged(nameof(ButtonUrls));
+
+                OnPropertyChanged(nameof(ElapsedTimeText));
             });
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged(string name)
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
-            var handler = PropertyChanged;
-            if (handler != null)
-                handler(this, new PropertyChangedEventArgs(name));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }

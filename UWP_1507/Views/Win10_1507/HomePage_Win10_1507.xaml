@@ -39,23 +39,22 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid Width="96" Height="96">
-                        <Image
-                            Visibility="{x:Bind ViewModel.LargeImage, Converter={StaticResource NullToVisibilityConverter}}"
-                            Source="{Binding ViewModel.LargeImage}"
-                            Stretch="UniformToFill"
-                            Width="96" Height="96"/>
+                        <Image x:Name="LargeImage"
+                               LayoutUpdated="LargeImage_LayoutUpdated"
+                               Visibility="{x:Bind ViewModel.LargeImageUrl, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}"
+                               Stretch="UniformToFill"
+                               Width="96" Height="96"/>
 
                         <Grid Width="32" Height="32"
-                              HorizontalAlignment="Right"
-                              VerticalAlignment="Bottom"
-                              Margin="0,0,4,4"
-                              Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}">
-                            <Image
-                                Visibility="{x:Bind ViewModel.SmallImage, Converter={StaticResource NullToVisibilityConverter}}"
-                                Source="{Binding ViewModel.SmallImage}"
-                                Stretch="Uniform"
-                                Width="24" Height="24"
-                                Margin="4"/>
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}">
+                            <Image x:Name="SmallImage"
+                                   LayoutUpdated="SmallImage_LayoutUpdated"
+                                   Visibility="{x:Bind ViewModel.SmallImageUrl, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}"
+                                   Stretch="Uniform"
+                                   Width="24" Height="24"
+                                   Margin="4"/>
                         </Grid>
                     </Grid>
 
