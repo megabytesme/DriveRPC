@@ -1,0 +1,82 @@
+﻿<UserControl
+    x:Class="DriveRPC.Shared.UWP.Views.Controls.StatusCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:DriveRPC.Shared.UWP.Converters">
+
+    <UserControl.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Border Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
+            Padding="16"
+            Width="420"
+            MinHeight="140"
+            BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="1">
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid Width="96" Height="96">
+                <Image x:Name="LargeImage"
+                       Stretch="UniformToFill"
+                       Width="96" Height="96"
+                       Visibility="{Binding LargeImageUrl, Converter={StaticResource NullToVisibilityConverter}}"/>
+
+                <Grid Width="32" Height="32"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Bottom"
+                      Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}">
+                    <Image x:Name="SmallImage"
+                           Stretch="Uniform"
+                           Width="24" Height="24"
+                           Margin="4"
+                           Visibility="{Binding SmallImageUrl, Converter={StaticResource NullToVisibilityConverter}}"/>
+                </Grid>
+            </Grid>
+
+            <StackPanel Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Margin="12,0,0,0">
+
+                <TextBlock Text="{Binding ActivityName}"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           TextTrimming="CharacterEllipsis"/>
+
+                <TextBlock Text="{Binding ActivityDetails}"
+                           Margin="0,4,0,0"
+                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                           TextTrimming="CharacterEllipsis"/>
+
+                <TextBlock Text="{Binding ActivityState}"
+                           Margin="0,2,0,0"
+                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                           TextTrimming="CharacterEllipsis"/>
+
+                <StackPanel Orientation="Horizontal"
+                            Margin="0,8,0,0"
+                            Padding="12">
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon Glyph="&#xE7FC;"
+                                  Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                  Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding ElapsedTimeText}"
+                                   Foreground="{ThemeResource SystemControlHighlightAccentBrush}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding PartyText, Converter={StaticResource NullToVisibilityConverter}}">
+                        <FontIcon Glyph="&#xE716;"
+                                  Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                  Margin="12,0,6,0"/>
+                        <TextBlock Text="{Binding PartyText}"
+                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

@@ -34,6 +34,19 @@ namespace DriveRPC.Shared.UWP.Views
 
             DataContext = ViewModel;
 
+            StatusCardControl.DataContext = new StatusCardViewModel();
+
+            var card = StatusCardControl.ViewModel;
+
+            card.ActivityName = ViewModel.ActivityName;
+            card.ActivityDetails = ViewModel.ActivityDetails;
+            card.ActivityState = ViewModel.ActivityState;
+            card.ElapsedTimeText = ViewModel.ElapsedTimeText;
+            card.PartyText = ViewModel.PartyText;
+
+            card.LargeImageUrl = ViewModel.LargeImageUrl;
+            card.SmallImageUrl = ViewModel.SmallImageUrl;
+
             UpdateStatusText();
             ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         }
@@ -55,79 +68,36 @@ namespace DriveRPC.Shared.UWP.Views
             StatusTextBlock.Text = $"Status: {ViewModel.StatusText}";
         }
 
-        private void LargeImage_Loaded(object sender, RoutedEventArgs e)
-        {
-            UpdateLargeImage();
-        }
-
-        private void SmallImage_Loaded(object sender, RoutedEventArgs e)
-        {
-            UpdateSmallImage();
-        }
-
-        private void LargeImage_LayoutUpdated(object sender, object e)
-        {
-            if (LargeImage.Visibility == Visibility.Visible)
-                UpdateLargeImage();
-        }
-
-        private void SmallImage_LayoutUpdated(object sender, object e)
-        {
-            if (SmallImage.Visibility == Visibility.Visible)
-                UpdateSmallImage();
-        }
-
-        private async void UpdateLargeImage()
-        {
-            var url = ViewModel.LargeImageUrl;
-
-            if (url == _lastLargeUrl)
-                return;
-
-            _lastLargeUrl = url;
-
-            if (url == null)
-            {
-                LargeImage.Source = null;
-                return;
-            }
-
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                _largeBitmap = new BitmapImage(new Uri(url));
-                LargeImage.Source = _largeBitmap;
-            });
-        }
-
-        private async void UpdateSmallImage()
-        {
-            var url = ViewModel.SmallImageUrl;
-
-            if (url == _lastSmallUrl)
-                return;
-
-            _lastSmallUrl = url;
-
-            if (url == null)
-            {
-                SmallImage.Source = null;
-                return;
-            }
-
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                _smallBitmap = new BitmapImage(new Uri(url));
-                SmallImage.Source = _smallBitmap;
-            });
-        }
-
         private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            var card = StatusCardControl.ViewModel;
+
+            if (e.PropertyName == nameof(ViewModel.ActivityName))
+                card.ActivityName = ViewModel.ActivityName;
+
+            if (e.PropertyName == nameof(ViewModel.ActivityDetails))
+                card.ActivityDetails = ViewModel.ActivityDetails;
+
+            if (e.PropertyName == nameof(ViewModel.ActivityState))
+                card.ActivityState = ViewModel.ActivityState;
+
+            if (e.PropertyName == nameof(ViewModel.ElapsedTimeText))
+                card.ElapsedTimeText = ViewModel.ElapsedTimeText;
+
+            if (e.PropertyName == nameof(ViewModel.PartyText))
+                card.PartyText = ViewModel.PartyText;
+
             if (e.PropertyName == nameof(ViewModel.LargeImageUrl))
-                UpdateLargeImage();
+            {
+                if (card.LargeImageUrl != ViewModel.LargeImageUrl)
+                    card.LargeImageUrl = ViewModel.LargeImageUrl;
+            }
 
             if (e.PropertyName == nameof(ViewModel.SmallImageUrl))
-                UpdateSmallImage();
+            {
+                if (card.SmallImageUrl != ViewModel.SmallImageUrl)
+                    card.SmallImageUrl = ViewModel.SmallImageUrl;
+            }
         }
     }
 }

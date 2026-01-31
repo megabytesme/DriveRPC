@@ -23,6 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\ILocationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SensorRecorder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\AppearancePageViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\StatusCardViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\StatusViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SettingsViewModel.cs" />
   </ItemGroup>

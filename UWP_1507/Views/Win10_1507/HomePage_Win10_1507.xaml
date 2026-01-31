@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="using:DriveRPC.Shared.UWP.Converters"
+    xmlns:controls="using:DriveRPC.Shared.UWP.Views.Controls"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
@@ -10,7 +11,6 @@
     </Page.Resources>
 
     <Grid>
-
         <StackPanel Padding="20" VerticalAlignment="Top">
             <TextBlock Text="DriveRPC"
                        Style="{StaticResource TitleTextBlockStyle}" />
@@ -25,81 +25,7 @@
               HorizontalAlignment="Center"
               Margin="20,80,20,80">
 
-            <Border Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
-                    Padding="16"
-                    Width="420"
-                    MinHeight="140"
-                    BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
-                    BorderThickness="1">
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Grid Width="96" Height="96">
-                        <Image x:Name="LargeImage"
-                               LayoutUpdated="LargeImage_LayoutUpdated"
-                               Visibility="{x:Bind ViewModel.LargeImageUrl, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}"
-                               Stretch="UniformToFill"
-                               Width="96" Height="96"/>
-
-                        <Grid Width="32" Height="32"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Bottom"
-                            Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}">
-                            <Image x:Name="SmallImage"
-                                   LayoutUpdated="SmallImage_LayoutUpdated"
-                                   Visibility="{x:Bind ViewModel.SmallImageUrl, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}"
-                                   Stretch="Uniform"
-                                   Width="24" Height="24"
-                                   Margin="4"/>
-                        </Grid>
-                    </Grid>
-
-                    <StackPanel Grid.Column="1"
-                                VerticalAlignment="Center"
-                                Margin="12,0,0,0">
-
-                        <TextBlock Text="{x:Bind ViewModel.ActivityName, Mode=OneWay}"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   TextTrimming="CharacterEllipsis"/>
-
-                        <TextBlock Text="{x:Bind ViewModel.ActivityDetails, Mode=OneWay}"
-                                   Margin="0,4,0,0"
-                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                   TextTrimming="CharacterEllipsis"/>
-
-                        <TextBlock Text="{x:Bind ViewModel.ActivityState, Mode=OneWay}"
-                                   Margin="0,2,0,0"
-                                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                   TextTrimming="CharacterEllipsis"/>
-
-                        <StackPanel Orientation="Horizontal"
-                                    Margin="0,8,0,0"
-                                    Padding="12">
-                            <StackPanel Orientation="Horizontal">
-                                <FontIcon Glyph="&#xE7FC;"
-                                          Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
-                                          Margin="0,0,6,0"/>
-                                <TextBlock Text="{x:Bind ViewModel.ElapsedTimeText, Mode=OneWay}"
-                                           Foreground="{ThemeResource SystemControlHighlightAccentBrush}"/>
-                            </StackPanel>
-
-                            <StackPanel Orientation="Horizontal"
-                                        Visibility="{x:Bind ViewModel.PartyText, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}">
-                                <FontIcon Glyph="&#xE716;"
-                                          Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                          Margin="12,0,6,0"/>
-                                <TextBlock Text="{x:Bind ViewModel.PartyText, Mode=OneWay}"
-                                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </StackPanel>
-                </Grid>
-            </Border>
+            <controls:StatusCard x:Name="StatusCardControl"/>
         </Grid>
 
         <CommandBar VerticalAlignment="Bottom">
@@ -110,6 +36,5 @@
                           Label="Stop RPC"
                           Click="StopRpc_Click"/>
         </CommandBar>
-
     </Grid>
 </Page>
