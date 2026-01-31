@@ -8,6 +8,8 @@
 
     <Page.Resources>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis_Inverted" Invert="True"/>
     </Page.Resources>
 
     <Grid>
@@ -30,11 +32,13 @@
 
         <CommandBar VerticalAlignment="Bottom">
             <AppBarButton Icon="Play"
-                          Label="Start RPC"
-                          Click="StartRpc_Click"/>
+                  Label="Start RPC"
+                  Click="StartRpc_Click"
+                  Visibility="{x:Bind ViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis_Inverted}}"/>
             <AppBarButton Icon="Stop"
-                          Label="Stop RPC"
-                          Click="StopRpc_Click"/>
+                  Label="Stop RPC"
+                  Click="StopRpc_Click"
+                  Visibility="{x:Bind ViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis}}"/>
         </CommandBar>
     </Grid>
 </Page>
