@@ -24,6 +24,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\ClientWebSocketAdapter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\AppearancePresetStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UpdateService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\HomePageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\AppearancePageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\SettingsPageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs" />
