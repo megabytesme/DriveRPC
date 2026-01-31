@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using UWP_1507;
 using Windows.Storage;
@@ -72,6 +71,7 @@ namespace DriveRPC.Shared.UWP.Views
             _presetFlyout.Items.Add(deleteItem);
 
             Loaded += OnLoaded;
+            SizeChanged += AppearancePage_Win10_1507_SizeChanged;
         }
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -111,6 +111,76 @@ namespace DriveRPC.Shared.UWP.Views
             UpdateStatusText();
 
             ViewModel.SelectedGpsSource = ViewModel.SelectedGpsSource;
+        }
+
+        private void AppearancePage_Win10_1507_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateResponsiveLayout(e.NewSize.Width, e.NewSize.Height);
+        }
+
+        private void UpdateResponsiveLayout(double width, double height)
+        {
+            if (width >= height)
+            {
+                Grid.SetRow(ControlsPanel, 0);
+                Grid.SetColumn(ControlsPanel, 0);
+
+                Grid.SetRow(PreviewStatusCard, 0);
+                Grid.SetColumn(PreviewStatusCard, 1);
+
+                Row2Grid.ColumnDefinitions[0].Width = GridLength.Auto;
+                Row2Grid.ColumnDefinitions[1].Width = new GridLength(1, GridUnitType.Star);
+
+                ControlsPanel.HorizontalAlignment = HorizontalAlignment.Left;
+                ControlsPanel.VerticalAlignment = VerticalAlignment.Stretch;
+
+                PreviewStatusCard.HorizontalAlignment = HorizontalAlignment.Center;
+                PreviewStatusCard.VerticalAlignment = VerticalAlignment.Center;
+
+                PreviewStatusCard.Margin = new Thickness(0);
+            }
+            else
+            {
+                Grid.SetRow(ControlsPanel, 0);
+                Grid.SetColumn(ControlsPanel, 0);
+
+                Grid.SetRow(PreviewStatusCard, 1);
+                Grid.SetColumn(PreviewStatusCard, 0);
+
+                Row2Grid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+                Row2Grid.ColumnDefinitions[1].Width = new GridLength(0);
+
+                ControlsPanel.HorizontalAlignment = HorizontalAlignment.Center;
+                ControlsPanel.VerticalAlignment = VerticalAlignment.Top;
+
+                PreviewStatusCard.HorizontalAlignment = HorizontalAlignment.Center;
+                PreviewStatusCard.VerticalAlignment = VerticalAlignment.Top;
+
+                PreviewStatusCard.Margin = new Thickness(0, 32, 0, 0);
+
+                GpsSourceCombo.HorizontalAlignment = HorizontalAlignment.Center;
+                ReplayControlsPanel.HorizontalAlignment = HorizontalAlignment.Center;
+                ApplyButton.HorizontalAlignment = HorizontalAlignment.Center;
+                SaveButton.HorizontalAlignment = HorizontalAlignment.Center;
+            }
+        }
+
+        protected override void OnNavigatedTo(Windows.UI.Xaml.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            var width = ActualWidth;
+            var height = ActualHeight;
+            if (double.IsNaN(width) || width == 0)
+            {
+                width = Window.Current.Bounds.Width;
+            }
+            if (double.IsNaN(height) || height == 0)
+            {
+                height = Window.Current.Bounds.Height;
+            }
+
+            UpdateResponsiveLayout(width, height);
         }
 
         private void StatusViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)

@@ -9,9 +9,10 @@
     </UserControl.Resources>
 
     <Border Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}"
-            Padding="16"
-            Width="420"
-            MinHeight="140"
+            Padding="8"
+            MinWidth="240"
+            MaxWidth="420"
+            HorizontalAlignment="Center"
             BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
             BorderThickness="1">
 

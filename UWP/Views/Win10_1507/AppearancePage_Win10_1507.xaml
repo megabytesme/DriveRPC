@@ -13,7 +13,7 @@
         <converters:BooleanToVisibilityConverter x:Key="BoolToVis_Inverted" Invert="True"/>
     </Page.Resources>
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -125,71 +125,101 @@
             </StackPanel>
         </ScrollViewer>
 
-        <Grid Grid.Row="2"
-              Padding="12"
-              Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
+        <Grid x:Name="Row2Grid"
+      Grid.Row="2"
+      Padding="12"
+      BorderBrush="{ThemeResource SystemControlHighlightAccentBrush}"
+      BorderThickness="1">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0"
-                        VerticalAlignment="Bottom"
-                        Margin="0,0,12,0">
+            <Grid x:Name="ControlsPanel"
+          Grid.Row="0"
+          Grid.Column="0">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
                 <ComboBox x:Name="GpsSourceCombo"
                           Header="GPS source"
                           Margin="0,0,0,8"
                           Width="200"
-                          ItemsSource="{x:Bind ViewModel.GpsSources}"/>
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Top"
+                          Grid.Row="0"/>
+
                 <StackPanel x:Name="ReplayControlsPanel"
                             Orientation="Horizontal"
-                            Margin="0,0,0,8">
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Grid.Row="1">
+
                     <Button Click="PauseReplay_Click"
-                            Margin="0,0,8,0"
-                            Visibility="{x:Bind ViewModel.IsReplaying, Mode=OneWay, Converter={StaticResource BoolToVis}}">
+                    Margin="0,0,8,0"
+                    Visibility="{x:Bind ViewModel.IsReplaying, Mode=OneWay, Converter={StaticResource BoolToVis}}">
                         <FontIcon Glyph="&#xE769;" />
                     </Button>
+
                     <Button Click="ResumeReplay_Click"
-                            Margin="0,0,8,0"
-                            Visibility="{x:Bind ViewModel.IsReplaying, Mode=OneWay, Converter={StaticResource BoolToVis_Inverted}}">
+                    Margin="0,0,8,0"
+                    Visibility="{x:Bind ViewModel.IsReplaying, Mode=OneWay, Converter={StaticResource BoolToVis_Inverted}}">
                         <FontIcon Glyph="&#xE768;" />
                     </Button>
+
                     <Slider x:Name="ReplaySlider"
-                            Minimum="0"
-                            Maximum="{x:Bind ViewModel.ReplayDuration.TotalSeconds, Mode=OneWay}"
-                            Value="{x:Bind ViewModel.ReplayPosition.TotalSeconds, Mode=OneWay}"
-                            ValueChanged="ReplaySlider_ValueChanged"
-                            Width="120"
-                            Margin="0,0,8,0"/>
+                    Minimum="0"
+                    Maximum="{x:Bind ViewModel.ReplayDuration.TotalSeconds, Mode=OneWay}"
+                    Value="{x:Bind ViewModel.ReplayPosition.TotalSeconds, Mode=OneWay}"
+                    ValueChanged="ReplaySlider_ValueChanged"
+                    Width="120"
+                    Margin="0,0,8,0"/>
+
                     <TextBlock Text="{x:Bind ViewModel.ReplayTimeText, Mode=OneWay}"
-                               VerticalAlignment="Center"
-                               Margin="8,0,0,0"
-                               Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                               FontSize="12"/>
+                       VerticalAlignment="Center"
+                       Margin="8,0,8,0"
+                       Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                       FontSize="12"/>
+
                     <ComboBox x:Name="ReplaySpeedCombo"
-                              Width="80"
-                              ItemsSource="{x:Bind ViewModel.ReplaySpeeds}"/>
+                      Width="80"
+                      ItemsSource="{x:Bind ViewModel.ReplaySpeeds}"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Left">
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            Grid.Row="2">
+
                     <Button x:Name="ApplyButton"
-                            Content="Apply"
-                            Width="120"
-                            Margin="0,0,8,0"
-                            Click="Apply_Click"/>
+                    Content="Apply"
+                    Width="120"
+                    Margin="0,0,8,0"
+                    Click="Apply_Click"/>
                     <Button x:Name="SaveButton"
-                            Content="Save"
-                            Width="120"
-                            Click="Save_Click"/>
+                    Content="Save"
+                    Width="120"
+                    Click="Save_Click"/>
                 </StackPanel>
-            </StackPanel>
+            </Grid>
 
             <controls:StatusCard x:Name="PreviewStatusCard"
-                                 Grid.Column="1"
-                                 HorizontalAlignment="Center"
-                                 VerticalAlignment="Center"/>
+                         Grid.Row="1"
+                         Grid.Column="0"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         Margin="0,12,0,0"/>
         </Grid>
 
         <Grid Grid.Row="3">
