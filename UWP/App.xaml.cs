@@ -61,8 +61,8 @@ namespace UWP
             ReverseGeocoder = new NominatimGeocodingService();
             SecureStorage = new SecureStorage();
             RpcController = new RpcController(
-                SecureStorage,
-                new UwpFileCacheService()
+                App.SecureStorage, new UwpFileCacheService(),
+                () => new ClientWebSocketAdapter()
             );
             PresenceUpdater = new PresenceUpdateService(GpsService, RpcController, PresetService);
 

@@ -21,7 +21,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\AppearanceService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FirstRunService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SecureStorage.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\RpcController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ClientWebSocketAdapter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\AppearancePresetStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UpdateService.cs" />

@@ -1,4 +1,5 @@
 ﻿#if WINDOWS_UWP
+using Windows.ApplicationModel;
 using Windows.Foundation.Metadata;
 #endif
 
@@ -94,6 +95,74 @@ namespace DriveRPC.Shared.Services
 
                 return "Unknown";
             }
+        }
+        public static string OsFamily
+        {
+            get
+            {
+                if (IsWindows) return "Windows";
+                if (IsAndroid) return "Android";
+                if (IsiOS) return "iOS";
+                if (IsMac) return "macOS";
+                if (IsLinux) return "Linux";
+                return "Unknown OS";
+            }
+        }
+
+        public static string AppVersion
+        {
+            get
+            {
+#if WINDOWS_UWP
+                var v = Package.Current.Id.Version;
+                return $"{v.Major}.{v.Minor}.{v.Build}";
+#elif MAUI
+                var version = AppInfo.VersionString;
+                var build = AppInfo.BuildString;
+                return $"{version}.{build}";
+#else
+                return "Unknown";
+#endif
+            }
+        }
+
+        public static string PlatformFamily
+        {
+            get
+            {
+#if UWP1507
+                return "UWP_1507";
+#elif UWP1709
+                return "UWP_1709";
+#elif MAUI
+                return "MAUI";
+#else
+                return "UnknownPlatform";
+#endif
+            }
+        }
+
+        public static string Architecture
+        {
+            get
+            {
+#if MAUI
+                return DeviceInfo.Current.ProcessArchitecture.ToString().ToLowerInvariant();
+#elif WINDOWS_UWP
+                return Package.Current.Id.Architecture.ToString().ToLower();
+#else
+                return Environment.Is64BitProcess ? "x64" : "x86";
+#endif
+            }
+        }
+
+        public static string GetOsDescriptor
+        {
+            get
+            {
+                return $"{OsFamily} v{AppVersion} ({PlatformFamily} {Architecture})";
+            }
+            
         }
     }
 }
