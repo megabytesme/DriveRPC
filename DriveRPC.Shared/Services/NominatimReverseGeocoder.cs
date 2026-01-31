@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using DriveRPC.Shared.Models;
@@ -20,6 +21,8 @@ namespace DriveRPC.Shared.Services
         private double _lastLat;
         private double _lastLon;
         private DateTimeOffset _lastLookupTime = DateTimeOffset.MinValue;
+        private readonly Dictionary<(int latKey, int lonKey), LocationInfo> _cache
+            = new Dictionary<(int latKey, int lonKey), LocationInfo>();
 
         private const double MinDistanceMeters = 50.0;
         private static readonly TimeSpan MinInterval = TimeSpan.FromSeconds(1);
@@ -27,6 +30,18 @@ namespace DriveRPC.Shared.Services
         private bool _lookupInProgress;
 
         public async Task<LocationInfo> LookupAsync(double lat, double lon)
+        {
+            var key = ((int)(lat * 10000), (int)(lon * 10000));
+
+            if (_cache.TryGetValue(key, out var cached))
+                return cached;
+
+            var info = await PerformLookupAsync(lat, lon);
+            _cache[key] = info;
+            return info;
+        }
+
+        public async Task<LocationInfo> PerformLookupAsync(double lat, double lon)
         {
             if (_lookupInProgress)
                 return _lastResult;
