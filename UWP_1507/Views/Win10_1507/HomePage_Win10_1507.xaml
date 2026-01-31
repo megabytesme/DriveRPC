@@ -7,7 +7,6 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <converters:BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converters:BooleanToVisibilityConverter x:Key="BoolToVis_Inverted" Invert="True"/>
     </Page.Resources>

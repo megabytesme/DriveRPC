@@ -26,7 +26,7 @@ namespace DriveRPC.Shared.UWP.Services
         private DiscordGatewayClient _client;
         private IWebSocketClient _socket;
 
-        private static bool _sessionActive = false;
+        private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
 
         public bool IsRunning { get; private set; }
         public string StatusText { get; private set; } = "Idle";
@@ -35,6 +35,7 @@ namespace DriveRPC.Shared.UWP.Services
         public event Action PresenceUpdated;
 
         private const string AppId = "1466639317328990291";
+        private const uint WININET_E_CONNECTION_ABORTED = 0x80072EFE;
 
         private long? _activityStartTimestamp;
 
@@ -64,116 +65,158 @@ namespace DriveRPC.Shared.UWP.Services
             }
         }
 
-        private async Task EnsureActiveAsync()
-        {
-            if (IsRunning && _client != null && _socket != null &&
-                _socket.State == RpcWebSocketState.Open)
-                return;
-
-            await StartAsync();
-        }
-
         public async Task StartAsync()
         {
-            if (IsRunning)
-                return;
-
-            var token = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
-            if (string.IsNullOrWhiteSpace(token))
+            await _connectionLock.WaitAsync();
+            try
             {
-                StatusText = "No token configured.";
-                PresenceUpdated?.Invoke();
-                return;
-            }
+                if (IsRunning && _client != null && _socket != null &&
+                    _socket.State == RpcWebSocketState.Open)
+                    return;
 
-            var keepAliveOk = await BackgroundKeeper.RequestKeepAliveAsync();
-            if (!keepAliveOk)
-            {
-                StatusText = "Background execution denied.";
-                PresenceUpdated?.Invoke();
-                return;
-            }
+                var token = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    StatusText = "No token configured.";
+                    IsRunning = false;
+                    PresenceUpdated?.Invoke();
+                    return;
+                }
 
-            _socket = new ClientWebSocketAdapter();
+                var keepAliveOk = await BackgroundKeeper.RequestKeepAliveAsync();
+                if (!keepAliveOk)
+                {
+                    StatusText = "Background execution denied.";
+                    IsRunning = false;
+                    PresenceUpdated?.Invoke();
+                    return;
+                }
 
-            var options = new DiscordConnectionOptions
-            {
-                Token = token,
-                ApplicationId = AppId
-            };
+                _client = null;
+                _socket = null;
 
-            _client = new DiscordGatewayClient(options, _socket);
-            await _client.ConnectAsync();
+                _socket = new ClientWebSocketAdapter();
+
+                var options = new DiscordConnectionOptions
+                {
+                    Token = token,
+                    ApplicationId = AppId
+                };
+
+                _client = new DiscordGatewayClient(options, _socket);
+
+                try
+                {
+                    await _client.ConnectAsync();
+                }
+                catch (Exception ex) when ((uint)ex.HResult == WININET_E_CONNECTION_ABORTED)
+                {
+                    StatusText = "RPC connection aborted while connecting.";
+                    IsRunning = false;
+                    PresenceUpdated?.Invoke();
+                    return;
+                }
 
 #if UWP1507
-            var rawLargeImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Icon/DriveRPC.png";
+                var rawLargeImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Icon/DriveRPC.png";
 #else
-            var rawLargeImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Icon/DriveRPC-3D.png";
+                var rawLargeImg = "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Icon/DriveRPC-3D.png";
 #endif
 
-            var rawSmallImg = OSHelper.IsWindows11
-                ? "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2021).png"
-                : "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2012).png";
+                var rawSmallImg = OSHelper.IsWindows11
+                    ? "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2021).png"
+                    : "https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Windows/Windows%20logo%20(2012).png";
 
-            var proxiedLargeImage = await DiscordGatewayClient.ResolveExternalImageAsync(rawLargeImg, options.ApplicationId, options.Token);
-            var proxiedSmallImage = await DiscordGatewayClient.ResolveExternalImageAsync(rawSmallImg, options.ApplicationId, options.Token);
+                var proxiedLargeImage = await DiscordGatewayClient.ResolveExternalImageAsync(rawLargeImg, options.ApplicationId, options.Token);
+                var proxiedSmallImage = await DiscordGatewayClient.ResolveExternalImageAsync(rawSmallImg, options.ApplicationId, options.Token);
 
-            _activityStartTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                _activityStartTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-            var config = new RpcConfig
+                var config = new RpcConfig
+                {
+                    Name = "Driving",
+                    Details = "Sharing my drive on Discord",
+                    State = $" Using DriveRPC for Windows {_settingsVm.GetAppVersion()} ({_settingsVm.GetAppName()}) {_settingsVm.GetArchitecture()}",
+                    Status = "online",
+                    Type = "0",
+                    Platform = "desktop",
+                    LargeImg = proxiedLargeImage,
+                    LargeText = "DriveRPC",
+                    SmallImg = proxiedSmallImage,
+                    SmallText = OSHelper.IsWindows11 ? "Windows 11" : "Windows 10",
+                };
+
+                var presence = RpcHelper.BuildPresence(config, AppId);
+                CurrentPresence = presence;
+
+                try
+                {
+                    await _client.UpdatePresenceAsync(config);
+                }
+                catch (Exception ex) when ((uint)ex.HResult == WININET_E_CONNECTION_ABORTED)
+                {
+                    StatusText = "RPC connection aborted while sending initial presence.";
+                    IsRunning = false;
+                    PresenceUpdated?.Invoke();
+                    return;
+                }
+
+                IsRunning = true;
+                StatusText = "RPC running.";
+                PresenceUpdated?.Invoke();
+            }
+            finally
             {
-                Name = "Driving",
-                Details = "Sharing my drive on Discord",
-                State = $" Using DriveRPC for Windows {_settingsVm.GetAppVersion()} ({_settingsVm.GetAppName()}) {_settingsVm.GetArchitecture()}",
-                Status = "online",
-                Type = "0",
-                Platform = "desktop",
-                LargeImg = proxiedLargeImage,
-                LargeText = "DriveRPC",
-                SmallImg = proxiedSmallImage,
-                SmallText = OSHelper.IsWindows11 ? "Windows 11" : "Windows 10",
-            };
-
-            var presence = RpcHelper.BuildPresence(config, AppId);
-            CurrentPresence = presence;
-
-            await _client.UpdatePresenceAsync(config);
-
-            IsRunning = true;
-            StatusText = "RPC running.";
-            PresenceUpdated?.Invoke();
+                _connectionLock.Release();
+            }
         }
 
         public async Task StopAsync()
         {
-            if (!IsRunning)
-                return;
-
-            BackgroundKeeper.StopKeepAlive();
-
-            if (_socket?.State == RpcWebSocketState.Open)
+            await _connectionLock.WaitAsync();
+            try
             {
-                await _socket.CloseAsync(
-                    RpcWebSocketCloseStatus.NormalClosure,
-                    "User stopped RPC",
-                    CancellationToken.None
-                );
+                if (!IsRunning && _client == null && _socket == null)
+                    return;
+
+                BackgroundKeeper.StopKeepAlive();
+
+                try
+                {
+                    if (_socket?.State == RpcWebSocketState.Open)
+                    {
+                        await _socket.CloseAsync(
+                            RpcWebSocketCloseStatus.NormalClosure,
+                            "User stopped RPC",
+                            CancellationToken.None
+                        );
+                    }
+                }
+                catch (Exception ex) when ((uint)ex.HResult == WININET_E_CONNECTION_ABORTED)
+                {}
+
+                _client = null;
+                _socket = null;
+
+                IsRunning = false;
+                StatusText = "RPC stopped.";
+                CurrentPresence = null;
+
+                PresenceUpdated?.Invoke();
             }
-
-            IsRunning = false;
-            StatusText = "RPC stopped.";
-            CurrentPresence = null;
-
-            PresenceUpdated?.Invoke();
+            finally
+            {
+                _connectionLock.Release();
+            }
         }
 
         public async Task UpdatePresenceAsync(RpcConfig config)
         {
+            await _connectionLock.WaitAsync();
             try
             {
-                await EnsureActiveAsync();
-
-                if (!IsRunning || _client == null)
+                if (!IsRunning || _client == null || _socket == null ||
+                    _socket.State != RpcWebSocketState.Open)
                     return;
 
                 if (_activityStartTimestamp == null)
@@ -182,14 +225,23 @@ namespace DriveRPC.Shared.UWP.Services
                 var presence = RpcHelper.BuildPresence(config, AppId);
                 CurrentPresence = presence;
 
-                await _client.UpdatePresenceAsync(config);
+                try
+                {
+                    await _client.UpdatePresenceAsync(config);
+                }
+                catch (Exception ex) when ((uint)ex.HResult == WININET_E_CONNECTION_ABORTED)
+                {
+                    IsRunning = false;
+                    StatusText = "RPC connection aborted while updating presence.";
+                    PresenceUpdated?.Invoke();
+                    return;
+                }
+
                 PresenceUpdated?.Invoke();
             }
-            catch (Exception ex)
+            finally
             {
-                IsRunning = false;
-                StatusText = $"RPC error: {ex.HResult:X}";
-                PresenceUpdated?.Invoke();
+                _connectionLock.Release();
             }
         }
 
@@ -197,8 +249,6 @@ namespace DriveRPC.Shared.UWP.Services
         {
             if (string.IsNullOrWhiteSpace(url))
                 return null;
-
-            await EnsureActiveAsync();
 
             var token = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
             if (string.IsNullOrWhiteSpace(token))

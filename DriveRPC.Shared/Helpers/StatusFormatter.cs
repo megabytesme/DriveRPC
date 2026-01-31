@@ -11,11 +11,6 @@ namespace DriveRPC.Shared.Helpers
         private readonly LocationInfo _location;
         private readonly bool _countryUsesMph;
 
-        public StatusFormatter(AppearancePreset preset)
-            : this(preset, null)
-        {
-        }
-
         public StatusFormatter(AppearancePreset preset, LocationInfo location)
         {
             _preset = preset;
@@ -43,23 +38,6 @@ namespace DriveRPC.Shared.Helpers
                 return "Driving";
 
             return "Driving " + _preset.CarName;
-        }
-
-        public string BuildDetails(GpsSnapshot gps, string locationText)
-        {
-            var parts = new List<string>();
-
-            var speedPart = FormatSpeed(gps != null ? gps.SpeedMetersPerSecond : null);
-            if (!string.IsNullOrEmpty(speedPart))
-                parts.Add(speedPart);
-
-            if (!string.IsNullOrEmpty(locationText))
-                parts.Add(locationText);
-
-            if (_preset.ShowCompass && gps != null && gps.HeadingDegrees != null)
-                parts.Add(FormatHeading(gps.HeadingDegrees.Value));
-
-            return parts.Count == 0 ? null : string.Join(" • ", parts);
         }
 
         public string BuildDetails(GpsSnapshot gps)

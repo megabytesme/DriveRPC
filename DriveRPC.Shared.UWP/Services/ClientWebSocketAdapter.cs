@@ -38,15 +38,29 @@ namespace DriveRPC.Shared.UWP.Services
 
         private void Socket_MessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
-            using (var reader = args.GetDataReader())
+            try
             {
-                reader.UnicodeEncoding = UnicodeEncoding.Utf8;
-                var text = reader.ReadString(reader.UnconsumedBufferLength);
-
-                lock (_receiveBuffer)
+                using (var reader = args.GetDataReader())
                 {
-                    _receiveBuffer.Enqueue(text);
+                    reader.UnicodeEncoding = UnicodeEncoding.Utf8;
+                    var text = reader.ReadString(reader.UnconsumedBufferLength);
+
+                    lock (_receiveBuffer)
+                    {
+                        _receiveBuffer.Enqueue(text);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                const uint WININET_E_CONNECTION_ABORTED = 0x80072EFE;
+
+                if ((uint)ex.HResult == WININET_E_CONNECTION_ABORTED)
+                {
+                    return;
+                }
+
+                throw;
             }
         }
 

@@ -2,6 +2,7 @@
 using DriveRPC.Shared.ViewModels;
 using System;
 using System.ComponentModel;
+using UWP;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
@@ -29,7 +30,10 @@ namespace DriveRPC.Shared.UWP.Views
 
             ViewModel = new StatusViewModel(
                 RpcController.Instance,
-                new UiThread()
+                new UiThread(),
+                App.PresetService,
+                null,
+                App.GpsService
             );
 
             DataContext = ViewModel;

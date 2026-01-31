@@ -1,4 +1,6 @@
-﻿using DriveRPC.Shared.Services;
+﻿using DriveRPC.Shared.Helpers;
+using DriveRPC.Shared.Models;
+using DriveRPC.Shared.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,18 +14,98 @@ namespace DriveRPC.Shared.ViewModels
     {
         private readonly IRpcController _rpc;
         private readonly IUiThread _ui;
+        private readonly ActivePresetService _presetService;
+        private readonly AppearancePageViewModel _appearanceVm;
+        private readonly ILocationService _realGps;
+        private readonly NominatimReverseGeocoder _reverseGeocoder;
+
+        private LocationInfo _lastLocation;
+        private string _countryFlagAssetKey;
 
         private const string AppId = "1466639317328990291";
 
-        public StatusViewModel(IRpcController rpcController, IUiThread uiThread)
+        public bool IsLiveUpdatingEnabled { get; set; } = false;
+
+        public StatusViewModel(
+            IRpcController rpcController,
+            IUiThread uiThread,
+            ActivePresetService presetService,
+            AppearancePageViewModel appearanceVm,
+            ILocationService realGps)
         {
             _rpc = rpcController;
             _ui = uiThread;
+            _presetService = presetService;
+            _appearanceVm = appearanceVm;
+            _realGps = realGps;
+            _reverseGeocoder = new NominatimReverseGeocoder();
 
             _rpc.PresenceUpdated += OnPresenceUpdated;
 
+            _realGps.LocationUpdated += OnRealGpsUpdated;
+
             _ui.StartRepeatingTimer(TimeSpan.FromSeconds(1),
-                () => OnPropertyChanged(nameof(ElapsedTimeText)));
+                            () => OnPropertyChanged(nameof(ElapsedTimeText)));
+        }
+
+        private void OnRealGpsUpdated(object sender, EventArgs e)
+        {
+            if (!IsLiveUpdatingEnabled)
+                return;
+
+            var preset = _presetService.ActivePreset;
+            if (preset == null)
+                return;
+
+            _ = UpdateRpcAsync(preset);
+        }
+
+        private async Task UpdateRpcAsync(AppearancePreset preset)
+        {
+            var gps = new GpsSnapshot
+            {
+                Latitude = _realGps.CurrentLocation?.lat ?? 0,
+                Longitude = _realGps.CurrentLocation?.lon ?? 0,
+                SpeedMetersPerSecond = _realGps.SpeedMetersPerSecond,
+                HeadingDegrees = _realGps.HeadingDegrees
+            };
+
+            _lastLocation = await _reverseGeocoder.LookupAsync(gps.Latitude, gps.Longitude);
+            await EnsureCountryFlagCachedAsync();
+
+            var formatter = new StatusFormatter(preset, _lastLocation);
+            var config = formatter.BuildRpcConfig(gps, _rpc.ActivityStartTimestamp, _countryFlagAssetKey);
+
+            await UpdatePresenceAsync(config);
+        }
+
+        public RpcConfig BuildRpcConfigFromPreset(AppearancePreset preset)
+        {
+            var gps = new GpsSnapshot
+            {
+                Latitude = _realGps.CurrentLocation?.lat ?? 0,
+                Longitude = _realGps.CurrentLocation?.lon ?? 0,
+                SpeedMetersPerSecond = _realGps.SpeedMetersPerSecond,
+                HeadingDegrees = _realGps.HeadingDegrees
+            };
+
+            var formatter = new StatusFormatter(preset, _lastLocation);
+
+            return formatter.BuildRpcConfig(gps, _rpc.ActivityStartTimestamp, _countryFlagAssetKey);
+        }
+
+        private async Task EnsureCountryFlagCachedAsync()
+        {
+            if (_lastLocation == null || string.IsNullOrEmpty(_lastLocation.CountryCode))
+                return;
+
+            if (!string.IsNullOrEmpty(_countryFlagAssetKey))
+                return;
+
+            var code = _lastLocation.CountryCode.ToUpperInvariant();
+            var url = $"https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Flags/{code.ToLower()}.png";
+
+            _countryFlagAssetKey = await _rpc.CacheImageAsync(url);
         }
 
         public bool IsRunning => _rpc.IsRunning;
@@ -154,6 +236,11 @@ namespace DriveRPC.Shared.ViewModels
         public Task StopAsync()
         {
             return _rpc.StopAsync().ContinueWith(t => _ui.Run(OnPresenceUpdated));
+        }
+
+        public Task UpdatePresenceAsync(RpcConfig config)
+        {
+            return _rpc.UpdatePresenceAsync(config).ContinueWith(t => _ui.Run(OnPresenceUpdated));
         }
 
         private void OnPresenceUpdated()

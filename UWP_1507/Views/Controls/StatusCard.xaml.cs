@@ -8,6 +8,12 @@ namespace DriveRPC.Shared.UWP.Views.Controls
 {
     public sealed partial class StatusCard : UserControl
     {
+        private string _lastLargeUrl;
+        private BitmapImage _largeBitmap;
+
+        private string _lastSmallUrl;
+        private BitmapImage _smallBitmap;
+
         public StatusCard()
         {
             InitializeComponent();
@@ -36,24 +42,42 @@ namespace DriveRPC.Shared.UWP.Views.Controls
 
         private void UpdateLargeImage()
         {
-            if (ViewModel?.LargeImageUrl == null)
+            var url = ViewModel?.LargeImageUrl;
+
+            if (url == _lastLargeUrl)
+                return;
+
+            _lastLargeUrl = url;
+
+            if (url == null)
             {
                 LargeImage.Source = null;
+                _largeBitmap = null;
                 return;
             }
 
-            LargeImage.Source = new BitmapImage(new Uri(ViewModel.LargeImageUrl));
+            _largeBitmap = new BitmapImage(new Uri(url));
+            LargeImage.Source = _largeBitmap;
         }
 
         private void UpdateSmallImage()
         {
-            if (ViewModel?.SmallImageUrl == null)
+            var url = ViewModel?.SmallImageUrl;
+
+            if (url == _lastSmallUrl)
+                return;
+
+            _lastSmallUrl = url;
+
+            if (url == null)
             {
                 SmallImage.Source = null;
+                _smallBitmap = null;
                 return;
             }
 
-            SmallImage.Source = new BitmapImage(new Uri(ViewModel.SmallImageUrl));
+            _smallBitmap = new BitmapImage(new Uri(url));
+            SmallImage.Source = _smallBitmap;
         }
     }
 }

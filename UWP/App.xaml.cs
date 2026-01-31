@@ -28,7 +28,8 @@ namespace UWP
     /// </summary>
     sealed partial class App : Application
     {
-        public static LocationService GpsService { get; private set; }
+        public static ILocationService GpsService { get; private set; }
+        public static ILocationService PreviewGpsService { get; private set; }
         public static ActivePresetService PresetService { get; private set; }
         public static PresenceUpdateService PresenceUpdater { get; private set; }
 
@@ -50,6 +51,7 @@ namespace UWP
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
             GpsService = new LocationService();
+            PreviewGpsService = new LocationService();
             PresetService = new ActivePresetService();
             PresenceUpdater = new PresenceUpdateService(GpsService, RpcController.Instance, PresetService);
 

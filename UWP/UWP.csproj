@@ -123,6 +123,9 @@
     <Compile Include="Views\Controls\StatusCard.xaml.cs">
       <DependentUpon>StatusCard.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Win10_1507\AppearancePage_Win10_1507.xaml.cs">
+      <DependentUpon>AppearancePage_Win10_1507.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Win10_1507\HomePage_Win10_1507.xaml.cs">
       <DependentUpon>HomePage_Win10_1507.xaml</DependentUpon>
     </Compile>
@@ -146,9 +149,6 @@
     </Compile>
     <Compile Include="Views\Win10_1709\SettingsPage_Win10_1709.xaml.cs">
       <DependentUpon>SettingsPage_Win10_1709.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Win10_1507\AppearancePage_Win10_1507.xaml.cs">
-      <DependentUpon>AppearancePage_Win10_1507.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Win11\ShellPage.xaml.cs">
       <DependentUpon>ShellPage.xaml</DependentUpon>
@@ -239,6 +239,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\Win10_1507\AppearancePage_Win10_1507.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\Win10_1507\HomePage_Win10_1507.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -268,10 +272,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Win10_1709\SettingsPage_Win10_1709.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\Win10_1507\AppearancePage_Win10_1507.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

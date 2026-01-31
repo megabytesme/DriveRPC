@@ -4,6 +4,7 @@ using DriveRPC.Shared.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -16,6 +17,10 @@ namespace DriveRPC.Shared.ViewModels
         private readonly IRpcController _rpc;
         private readonly IAppearancePresetStore _store;
         private readonly ActivePresetService _presetService;
+        private readonly NominatimReverseGeocoder _reverseGeocoder;
+
+        private LocationInfo _lastLocation;
+        private string _countryFlagAssetKey;
 
         public ObservableCollection<AppearancePreset> Presets { get; }
             = new ObservableCollection<AppearancePreset>();
@@ -30,9 +35,6 @@ namespace DriveRPC.Shared.ViewModels
                 {
                     _selectedPreset = value;
                     EditingPreset = value?.Clone();
-
-                    _presetService.SetActivePreset(value);
-
                     OnPropertyChanged();
                 }
             }
@@ -119,6 +121,7 @@ namespace DriveRPC.Shared.ViewModels
             _rpc = rpc;
             _store = store;
             _presetService = presetService;
+            _reverseGeocoder = new NominatimReverseGeocoder();
 
             _gps.LocationUpdated += (s, e) => LatestGps = BuildSnapshot();
 
@@ -233,6 +236,27 @@ namespace DriveRPC.Shared.ViewModels
             _ = SavePresetsAsync();
         }
 
+        public async Task ApplyChangesAsyncForPresetAsync(AppearancePreset targetPreset, AppearancePreset editing)
+        {
+            if (targetPreset == null || editing == null)
+                return;
+
+            editing.SeatCount = Math.Max(1, editing.SeatCount);
+            editing.SeatsUsed = Math.Max(1, Math.Min(editing.SeatsUsed, editing.SeatCount));
+
+            targetPreset.CopyFrom(editing);
+
+            _presetService.SetActivePreset(targetPreset);
+
+            if (!string.IsNullOrWhiteSpace(targetPreset.CarImageUrl))
+                targetPreset.CachedLargeImageKey = await _rpc.CacheImageAsync(targetPreset.CarImageUrl);
+
+            if (!string.IsNullOrWhiteSpace(targetPreset.SmallImageUrl))
+                targetPreset.CachedSmallImageKey = await _rpc.CacheImageAsync(targetPreset.SmallImageUrl);
+
+            await SavePresetsAsync();
+        }
+
         public async void ApplyChanges()
         {
             if (SelectedPreset == null || EditingPreset == null)
@@ -256,7 +280,7 @@ namespace DriveRPC.Shared.ViewModels
             await SavePresetsAsync();
         }
 
-        private void UpdatePreview()
+        private async void UpdatePreview()
         {
             if (EditingPreset == null)
             {
@@ -265,10 +289,33 @@ namespace DriveRPC.Shared.ViewModels
                 return;
             }
 
-            var formatter = new StatusFormatter(EditingPreset);
+            var gps = BuildSnapshot();
+
+            if (gps != null)
+            {
+                _lastLocation = await _reverseGeocoder.LookupAsync(gps.Latitude, gps.Longitude);
+                await EnsureCountryFlagCachedAsync();
+            }
+
+            var formatter = new StatusFormatter(EditingPreset, _lastLocation);
+            var config = formatter.BuildRpcConfig(gps, _rpc.ActivityStartTimestamp, _countryFlagAssetKey);
 
             PreviewActivityName = formatter.BuildActivityName();
-            PreviewDetails = formatter.BuildDetails(LatestGps, "Sample location");
+            PreviewDetails = formatter.BuildDetails(LatestGps);
+        }
+
+        private async Task EnsureCountryFlagCachedAsync()
+        {
+            if (_lastLocation == null || string.IsNullOrEmpty(_lastLocation.CountryCode))
+                return;
+
+            if (!string.IsNullOrEmpty(_countryFlagAssetKey))
+                return;
+
+            var code = _lastLocation.CountryCode.ToUpperInvariant();
+            var url = $"https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Flags/{code.ToLower()}.png";
+
+            _countryFlagAssetKey = await _rpc.CacheImageAsync(url);
         }
 
         private string _previewActivityName;
@@ -303,9 +350,33 @@ namespace DriveRPC.Shared.ViewModels
             }
         }
 
-        public async Task StartReplayAsync(System.IO.Stream stream)
+        public async Task RestartGpsAsync()
         {
-            await _gps.StartReplayAsync(stream);
+            if (SelectedGpsSource == GpsSource.Live)
+            {
+                if (_gps.IsReplaying)
+                    _gps.StopReplay();
+
+                if (_gps.IsListening)
+                    _gps.StopListening();
+
+                await _gps.StartListeningAsync();
+            }
+            else if (SelectedGpsSource == GpsSource.Replay)
+            {
+            }
+        }
+
+        public MemoryStream ReplayBuffer { get; private set; }
+
+        public async Task StartReplayWithBufferAsync(Stream fileStream)
+        {
+            ReplayBuffer = new MemoryStream();
+            await fileStream.CopyToAsync(ReplayBuffer);
+            ReplayBuffer.Position = 0;
+
+            var previewStream = new MemoryStream(ReplayBuffer.ToArray());
+            await _gps.StartReplayAsync(previewStream);
         }
 
         public void PauseReplay() => _gps.PauseReplay();

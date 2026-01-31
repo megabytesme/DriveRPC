@@ -4,108 +4,196 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:DriveRPC.Shared.Models"
     xmlns:page="using:DriveRPC.Shared.UWP.Views"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
+    xmlns:controls="using:DriveRPC.Shared.UWP.Views.Controls"
+    xmlns:converters="using:DriveRPC.Shared.UWP.Converters"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
+    <Page.Resources>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis_Inverted" Invert="True"/>
+    </Page.Resources>
+    
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <StackPanel Grid.Column="0" Padding="12">
-            <TextBlock Text="Presets"
-                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+        <Grid Grid.Row="0" Padding="12,12,12,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-            <ListView x:Name="PresetList"
-                      ItemsSource="{x:Bind ViewModel.Presets}">
-                <ListView.ItemTemplate>
+            <Pivot x:Name="PresetPivot"
+                   ItemsSource="{x:Bind ViewModel.Presets}"
+                   SelectionChanged="PresetPivot_SelectionChanged"
+                   RightTapped="PresetPivot_RightTapped"
+                   Holding="PresetPivot_Holding">
+                <Pivot.ItemTemplate>
                     <DataTemplate x:DataType="models:AppearancePreset">
                         <TextBlock Text="{x:Bind Name}"/>
                     </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                </Pivot.ItemTemplate>
+            </Pivot>
 
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                <Button Content="Add" Click="AddPreset_Click" Margin="0,0,8,0"/>
-                <Button Content="Remove" Click="RemovePreset_Click"/>
-            </StackPanel>
-        </StackPanel>
+            <Button Grid.Column="1"
+                    Content="+"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="AddPreset_Click"/>
+        </Grid>
 
-        <StackPanel Grid.Column="1" Padding="12">
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Padding="12">
 
-            <TextBox Header="Car name"
-                     Text="{x:Bind ViewModel.EditingPreset.CarName, Mode=TwoWay}"/>
+                <TextBox x:Name="PresetNameBox"
+                         Header="Preset name"
+                         Margin="0,0,0,8"
+                         Text="{x:Bind ViewModel.EditingPreset.Name, Mode=TwoWay}"
+                         TextChanged="PresetNameBox_TextChanged"/>
 
-            <TextBox Header="Car image URL"
-                     Text="{x:Bind ViewModel.EditingPreset.CarImageUrl, Mode=TwoWay}"/>
+                <Rectangle Height="1"
+                           Fill="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                           Margin="0,8,0,8"/>
 
-            <TextBox Header="Car image text"
-                     Text="{x:Bind ViewModel.EditingPreset.CarImageText, Mode=TwoWay}"/>
+                <TextBox Header="Car name"
+                         Margin="0,0,0,8"
+                         Text="{x:Bind ViewModel.EditingPreset.CarName, Mode=TwoWay}"/>
 
-            <ToggleSwitch Header="Show party info"
-              x:Name="ShowPartyToggle"
-              IsOn="{x:Bind ViewModel.EditingPreset.ShowParty, Mode=TwoWay}" />
+                <TextBox Header="Car image URL"
+                         Margin="0,0,0,8"
+                         Text="{x:Bind ViewModel.EditingPreset.CarImageUrl, Mode=TwoWay}"/>
 
-            <TextBox Header="Total seats"
-                     x:Name="SeatCountBox"
-                     InputScope="Number"
-                     Text="{x:Bind ViewModel.EditingPreset.SeatCount, Mode=TwoWay}" />
+                <TextBox Header="Car image text"
+                         Margin="0,0,0,8"
+                         Text="{x:Bind ViewModel.EditingPreset.CarImageText, Mode=TwoWay}"/>
 
-            <TextBox Header="Seats used"
-                     x:Name="SeatsUsedBox"
-                     InputScope="Number"
-                     Text="{x:Bind ViewModel.EditingPreset.SeatsUsed, Mode=TwoWay}" />
+                <Rectangle Height="1"
+                           Fill="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                           Margin="0,8,0,8"/>
 
-            <ComboBox x:Name="SpeedModeCombo"
-                      Header="Speed detail"
-                      ItemsSource="{x:Bind ViewModel.SpeedModes}"/>
+                <ToggleSwitch Header="Show party info"
+                              Margin="0,0,0,8"
+                              IsOn="{x:Bind ViewModel.EditingPreset.ShowParty, Mode=TwoWay}"/>
 
-            <ComboBox x:Name="LocationModeCombo"
-                      Header="Location detail"
-                      ItemsSource="{x:Bind ViewModel.LocationModes}"/>
-
-            <ToggleSwitch Header="Show compass"
-                          IsOn="{x:Bind ViewModel.EditingPreset.ShowCompass, Mode=TwoWay}"/>
-
-            <ComboBox x:Name="GpsSourceCombo"
-                      Header="GPS source"
-                      ItemsSource="{x:Bind ViewModel.GpsSources}"/>
-
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                <Button Content="⏸" Click="PauseReplay_Click"/>
-                <Button Content="▶" Click="ResumeReplay_Click"/>
-
-                <Slider x:Name="ReplaySlider"
-                        Minimum="0"
-                        Maximum="{x:Bind ViewModel.ReplayDuration.TotalSeconds, Mode=OneWay}"
-                        Value="{x:Bind ViewModel.ReplayPosition.TotalSeconds, Mode=OneWay}"
-                        ValueChanged="ReplaySlider_ValueChanged"
-                        Width="100" />
-
-                <ComboBox x:Name="ReplaySpeedCombo"
-                          Width="80"
-                          ItemsSource="{x:Bind ViewModel.ReplaySpeeds}"/>
-            </StackPanel>
-
-            <Border Margin="0,12,0,0"
-                    Padding="12"
-                    Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
-                <StackPanel>
-                    <TextBlock Text="{x:Bind ViewModel.PreviewActivityName}"
-                               FontSize="18"
-                               FontWeight="Bold"/>
-                    <TextBlock Text="{x:Bind ViewModel.PreviewDetails}"
-                               Margin="0,4,0,0"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBox Header="Total seats"
+                             Width="140"
+                             Margin="0,0,8,0"
+                             InputScope="Number"
+                             Text="{x:Bind ViewModel.EditingPreset.SeatCount, Mode=TwoWay}"/>
+                    <TextBox Header="Seats used"
+                             Width="140"
+                             InputScope="Number"
+                             Text="{x:Bind ViewModel.EditingPreset.SeatsUsed, Mode=TwoWay}"/>
                 </StackPanel>
-            </Border>
 
-            <Button Content="Apply"
-                    HorizontalAlignment="Right"
-                    Margin="0,12,0,0"
-                    Click="Apply_Click"/>
-        </StackPanel>
+                <Rectangle Height="1"
+                           Fill="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                           Margin="0,8,0,8"/>
+
+                <ComboBox x:Name="SpeedModeCombo"
+                          Header="Speed detail"
+                          Margin="0,0,0,8"
+                          ItemsSource="{x:Bind ViewModel.SpeedModes}"/>
+
+                <ComboBox x:Name="LocationModeCombo"
+                          Header="Location detail"
+                          Margin="0,0,0,8"
+                          ItemsSource="{x:Bind ViewModel.LocationModes}"/>
+
+                <ToggleSwitch Header="Show compass"
+                              Margin="0,0,0,8"
+                              IsOn="{x:Bind ViewModel.EditingPreset.ShowCompass, Mode=TwoWay}"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2"
+              Padding="12"
+              Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,12,0">
+
+                <ComboBox x:Name="GpsSourceCombo"
+                          Header="GPS source"
+                          Margin="0,0,0,8"
+                          Width="200"
+                          ItemsSource="{x:Bind ViewModel.GpsSources}"/>
+
+                <StackPanel x:Name="ReplayControlsPanel"
+                            Orientation="Horizontal"
+                            Margin="0,0,0,8">
+                    <Button Content="⏸"
+                            Click="PauseReplay_Click"
+                            Margin="0,0,8,0"/>
+                    <Button Content="▶"
+                            Click="ResumeReplay_Click"
+                            Margin="0,0,8,0"/>
+
+                    <Slider x:Name="ReplaySlider"
+                            Minimum="0"
+                            Maximum="{x:Bind ViewModel.ReplayDuration.TotalSeconds, Mode=OneWay}"
+                            Value="{x:Bind ViewModel.ReplayPosition.TotalSeconds, Mode=OneWay}"
+                            ValueChanged="ReplaySlider_ValueChanged"
+                            Width="120"
+                            Margin="0,0,8,0"/>
+
+                    <ComboBox x:Name="ReplaySpeedCombo"
+                              Width="80"
+                              ItemsSource="{x:Bind ViewModel.ReplaySpeeds}"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Left">
+                    <Button x:Name="ApplyButton"
+                            Content="Apply"
+                            Width="120"
+                            Margin="0,0,8,0"
+                            Click="Apply_Click"/>
+                    <Button x:Name="SaveButton"
+                            Content="Save"
+                            Width="120"
+                            Click="Save_Click"/>
+                </StackPanel>
+            </StackPanel>
+
+            <controls:StatusCard x:Name="PreviewStatusCard"
+                                 Grid.Column="1"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+        </Grid>
+
+        <Grid Grid.Row="3">
+            <CommandBar>
+
+                <AppBarButton Icon="Play"
+                      Label="Start RPC"
+                      Click="StartRpc_Click"
+                      Visibility="{x:Bind StatusViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis_Inverted}}"/>
+
+                <AppBarButton Icon="Stop"
+                      Label="Stop RPC"
+                      Click="StopRpc_Click"
+                      Visibility="{x:Bind StatusViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis}}"/>
+
+                <CommandBar.Content>
+                    <TextBlock x:Name="StatusTextBlock"
+                       Text="Status: Unknown"
+                       VerticalAlignment="Center"
+                       Margin="10,0,12,0"/>
+                </CommandBar.Content>
+
+            </CommandBar>
+        </Grid>
     </Grid>
 </page:AppearancePageBase>
