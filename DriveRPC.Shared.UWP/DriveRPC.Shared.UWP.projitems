@@ -14,13 +14,17 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\NavigationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\OSHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\LocationService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\NavigationFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UiThread.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\AppearanceService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FirstRunService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SecureStorage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\RpcController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ClientWebSocketAdapter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\AppearancePresetStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UpdateService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\AppearancePageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\SettingsPageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs" />
   </ItemGroup>
