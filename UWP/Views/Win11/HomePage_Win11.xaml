@@ -1,14 +1,73 @@
-﻿<Page
-    x:Class="UWP.Views.HomePage_Win11"
+﻿<page:HomePageBase
+    x:Class="DriveRPC.Shared.UWP.Views.HomePage_Win11"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:DriveRPC.Shared.UWP.Views"
+    xmlns:controls="using:DriveRPC.Shared.UWP.Views.Controls"
+    xmlns:converters="using:DriveRPC.Shared.UWP.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:page="using:DriveRPC.Shared.UWP.Views"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis_Inverted" Invert="True" />
+        <converters:StringToVisibilityConverter x:Key="StringToVis" />
+    </Page.Resources>
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
+        <CommandBar
+            Grid.Row="0"
+            HorizontalAlignment="Stretch"
+            Background="Transparent"
+            DefaultLabelPosition="Right">
+            <AppBarButton
+                Click="StartRpc_Click"
+                Icon="Play"
+                Label="Start RPC"
+                Visibility="{x:Bind ViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis_Inverted}}" />
+            <AppBarButton
+                Click="StopRpc_Click"
+                Icon="Stop"
+                Label="Stop RPC"
+                Visibility="{x:Bind ViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
+        </CommandBar>
+
+        <Grid Grid.Row="1" Margin="24">
+            <Border
+                x:Name="CardWrapper"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Visibility="{x:Bind CardViewModel.ActivityName, Mode=OneWay, Converter={StaticResource StringToVis}}">
+
+                <Border.Shadow>
+                    <ThemeShadow />
+                </Border.Shadow>
+
+                <controls:StatusCard x:Name="StatusCardControl" Margin="0" />
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Padding="16,8">
+            <TextBlock
+                x:Name="StatusTextBlock"
+                HorizontalAlignment="Center"
+                FontSize="16"
+                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="Status: Unknown" />
+        </Border>
     </Grid>
-</Page>
+</page:HomePageBase>
