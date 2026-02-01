@@ -9,11 +9,15 @@
     <Import_RootNamespace>DriveRPC.Shared.UWP</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\DiscordQrLoginControl.xaml.cs">
+      <DependentUpon>DiscordQrLoginControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\NullToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\BackgroundKeeper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\NavigationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\RemoteAuthService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\LocationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\NavigationFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileSystem.cs" />
@@ -26,5 +30,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Views\AppearancePageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\SettingsPageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)Controls\DiscordQrLoginControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 ﻿using DriveRPC.Shared.Services;
+using DriveRPC.Shared.UWP.Controls;
 using DriveRPC.Shared.UWP.Helpers;
 using DriveRPC.Shared.UWP.Models;
 using DriveRPC.Shared.UWP.Services;
@@ -6,14 +7,14 @@ using DriveRPC.Shared.ViewModels;
 using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation.Metadata;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Documents;
-using Windows.ApplicationModel.Core;
+using Windows.UI.Xaml.Media;
 
 namespace DriveRPC.Shared.UWP.Views
 {
@@ -228,6 +229,40 @@ namespace DriveRPC.Shared.UWP.Views
             if (mode == AppearanceMode.Win11) return "11";
             return "1507";
         }
+
+        protected async void OpenQrLogin_Click(object sender, RoutedEventArgs e)
+        {
+            var qrControl = new DiscordQrLoginControl();
+            bool isTokenSaved = false;
+
+            var dialog = new ContentDialog
+            {
+                Content = qrControl,
+                PrimaryButtonText = "Close"
+            };
+
+            qrControl.TokenFound += async (s, token) => {
+                TokenBox.Password = token;
+                ValidateTokenFormat(token);
+                await _vm.SaveTokenAsync(token);
+
+                isTokenSaved = true;
+
+                dialog.Hide();
+            };
+
+            qrControl.RequestClose += () => {
+                dialog.Hide();
+            };
+
+            await dialog.ShowAsync();
+
+            if (isTokenSaved)
+            {
+                await ShowSimpleDialogAsync("Saved", "Your Discord token has been securely stored.");
+            }
+        }
+
         protected async void AboutButton_Click(object sender, RoutedEventArgs e)
         {
             var scrollContent = new ScrollViewer
