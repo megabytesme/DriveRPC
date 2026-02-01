@@ -16,7 +16,7 @@ namespace DriveRPC.Shared.UWP.Views
 
             var previewGps = App.PreviewGpsService;
             var rpc = App.RpcController;
-            var store = new AppearancePresetStore();
+            var store = App.PresetStore;
             var presetService = App.PresetService;
 
             var viewModel = new AppearancePageViewModel(

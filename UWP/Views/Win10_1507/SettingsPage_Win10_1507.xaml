@@ -70,12 +70,21 @@
                           Checked="ShowTokenCheck_Checked"
                           Unchecked="ShowTokenCheck_Unchecked"/>
 
-                <Button Content="Save Token"
+                <TextBlock x:Name="TokenValidationText"
+                           Margin="0,4,0,0"
+                           Foreground="Red"
+                           FontSize="12"
+                           Text=""
+                           TextWrapping="Wrap" />
+
+                <Button x:Name="SaveTokenButton"
+                        Content="Save Token"
                         Margin="0,10,0,0"
                         Click="SaveToken_Click"
                         HorizontalAlignment="Stretch"/>
 
-                <Button Content="Clear Token"
+                <Button x:Name="ClearTokenButton"
+                        Content="Clear Token"
                         Margin="0,8,0,0"
                         Background="DarkRed"
                         Foreground="White"
@@ -94,7 +103,8 @@
                         Background="DarkRed"
                         Foreground="White"
                         HorizontalAlignment="Stretch"
-                        Margin="0,8,0,0"/>
+                        Margin="0,8,0,0"
+                        Click="BtnResetAllSettings_Click"/>
             </StackPanel>
 
             <StackPanel Style="{StaticResource GroupPanelStyle}">

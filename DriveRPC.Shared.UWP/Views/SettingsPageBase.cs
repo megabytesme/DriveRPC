@@ -4,12 +4,16 @@ using DriveRPC.Shared.UWP.Models;
 using DriveRPC.Shared.UWP.Services;
 using DriveRPC.Shared.ViewModels;
 using System;
-using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Windows.Foundation.Metadata;
+using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Documents;
+using Windows.ApplicationModel.Core;
 
 namespace DriveRPC.Shared.UWP.Views
 {
@@ -19,121 +23,131 @@ namespace DriveRPC.Shared.UWP.Views
         protected bool _loading = true;
         protected bool _suppressAppearanceChange;
 
-        protected SettingsPageBase(ISecureStorage secureStorage)
+        protected enum TokenFormat { Invalid, V1, V2, MFA }
+
+        protected SettingsPageBase(ISecureStorage secureStorage, IAppDataResetService appDataResetService)
         {
-            try
-            {
-                _vm = new SettingsViewModel(secureStorage);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("[SettingsPageBase] Constructor FAILED: " + ex);
-                throw;
-            }
+            _vm = new SettingsViewModel(secureStorage, appDataResetService);
         }
 
         protected async Task LoadAllAsync()
         {
             _loading = true;
-
             await _vm.LoadAsync();
+            if (TokenBox != null)
+                TokenBox.Password = _vm.UserToken ?? "";
 
-            TokenBox.Password = _vm.UserToken ?? "";
-
+            ValidateTokenFormat(TokenBox?.Password);
             _loading = false;
         }
 
-        protected void SetAppearance(AppearanceMode mode)
+        private TokenFormat GetTokenFormat(string token)
         {
-            AppearanceService.Set(mode);
-            ApplyAppearanceWithoutRestart();
+            if (string.IsNullOrWhiteSpace(token)) return TokenFormat.Invalid;
+
+            if (Regex.IsMatch(token, @"^mfa\.[\w-]{84}$", RegexOptions.IgnoreCase))
+                return TokenFormat.MFA;
+
+            if (Regex.IsMatch(token, @"^[\w-]{24}\.[\w-]{6}\.[\w-]{27}$"))
+                return TokenFormat.V1;
+
+            if (Regex.IsMatch(token, @"^[a-z\d]{24}\.[a-z\d]{6}\.([\w-]{107}|[\w-]{38})$", RegexOptions.IgnoreCase))
+                return TokenFormat.V2;
+
+            return TokenFormat.Invalid;
         }
 
-        protected void ApplyAppearanceWithoutRestart()
+        private void ValidateTokenFormat(string token)
         {
-            var window = Window.Current;
+            if (TokenValidationText == null) return;
 
-            window.Content = null;
-
-            var appResources = Application.Current.Resources;
-            appResources.MergedDictionaries.Clear();
-
-            switch (AppearanceService.Current)
+            if (string.IsNullOrWhiteSpace(token))
             {
-                case AppearanceMode.Win11:
-                    appResources.MergedDictionaries.Add(
-                        new ResourceDictionary { Source = new Uri("ms-appx:///Themes/Win11.xaml") });
-                    break;
+                TokenValidationText.Text = "";
+                return;
+            }
 
-                case AppearanceMode.Win10_1709:
-                    appResources.MergedDictionaries.Add(
-                        new ResourceDictionary { Source = new Uri("ms-appx:///Themes/Win10_1709.xaml") });
+            var format = GetTokenFormat(token);
+            switch (format)
+            {
+                case TokenFormat.V1:
+                    TokenValidationText.Text = "Token Format: V1 (Legacy)";
+                    TokenValidationText.Foreground = new SolidColorBrush(Colors.Green);
                     break;
-
+                case TokenFormat.V2:
+                    TokenValidationText.Text = "Token Format: V2 (Modern)";
+                    TokenValidationText.Foreground = new SolidColorBrush(Colors.Green);
+                    break;
+                case TokenFormat.MFA:
+                    TokenValidationText.Text = "Token Format: MFA (Multi-Factor)";
+                    TokenValidationText.Foreground = new SolidColorBrush(Colors.Green);
+                    break;
                 default:
-                    appResources.MergedDictionaries.Add(
-                        new ResourceDictionary { Source = new Uri("ms-appx:///Themes/Win10_1507.xaml") });
+                    TokenValidationText.Text = "This token does not match the expected Discord format.";
+                    TokenValidationText.Foreground = new SolidColorBrush(Colors.Red);
                     break;
             }
-
-            var frame = new Frame();
-            window.Content = frame;
-
-            frame.Navigate(NavigationHelper.GetPageType("Shell"), null);
-
-            window.Activate();
         }
 
-        protected AppearanceMode TagToMode(string tag)
+        protected void TokenBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            if (tag == "1507")
-            {
-                return AppearanceMode.Win10_1507;
-            }
-
-            if (tag == "1709")
-            {
-                return AppearanceMode.Win10_1709;
-            }
-
-            if (tag == "11")
-            {
-                return AppearanceMode.Win11;
-            }
-
-            return AppearanceMode.Win10_1507;
+            if (_loading) return;
+            ValidateTokenFormat(TokenBox.Password);
         }
 
-        protected string ModeToTag(AppearanceMode mode)
+        protected async void SaveToken_Click(object sender, RoutedEventArgs e)
         {
-            if (mode == AppearanceMode.Win10_1507)
+            var token = TokenBox.Password;
+
+            if (string.IsNullOrWhiteSpace(token))
             {
-                return "1507";
+                await ShowSimpleDialogAsync("Invalid Token", "Please enter a Discord token before saving.");
+                return;
             }
 
-            if (mode == AppearanceMode.Win10_1709)
+            if (GetTokenFormat(token) == TokenFormat.Invalid)
             {
-                return "1709";
+                var dialog = CreateDialog();
+                dialog.Title = "Token May Be Incorrect";
+                dialog.Content = "The token entered doesn't look like a standard Discord token. If it's incorrect, the RPC will fail to connect. Save anyway?";
+                dialog.PrimaryButtonText = "Save Anyway";
+                dialog.SecondaryButtonText = "Cancel";
+
+                if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+                    return;
             }
 
-            if (mode == AppearanceMode.Win11)
-            {
-                return "11";
-            }
-
-            return "1507";
+            await _vm.SaveTokenAsync(token);
+            await ShowSimpleDialogAsync("Saved", "Your Discord token has been securely stored.");
         }
 
-        protected virtual ContentDialog CreateDialog()
+        protected void ShowTokenCheck_Checked(object sender, RoutedEventArgs e)
         {
-            return new ContentDialog();
+            if (TokenBox == null) return;
+            if (ApiInformation.IsPropertyPresent("Windows.UI.Xaml.Controls.PasswordBox", "PasswordRevealMode"))
+                TokenBox.PasswordRevealMode = PasswordRevealMode.Visible;
+        }
+
+        protected void ShowTokenCheck_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (TokenBox == null) return;
+            if (ApiInformation.IsPropertyPresent("Windows.UI.Xaml.Controls.PasswordBox", "PasswordRevealMode"))
+                TokenBox.PasswordRevealMode = PasswordRevealMode.Hidden;
+        }
+
+        protected async void ClearToken_Click(object sender, RoutedEventArgs e)
+        {
+            await _vm.ResetTokenAsync();
+            TokenBox.Password = "";
+            TokenValidationText.Text = "";
+            await ShowSimpleDialogAsync("Cleared", "Your Discord token has been removed.");
         }
 
         protected async void BtnResetAllSettings_Click(object sender, RoutedEventArgs e)
         {
             var dialog = CreateDialog();
             dialog.Title = "Reset All Settings";
-            dialog.Content = "This will delete ALL configuration files. Continue?";
+            dialog.Content = "This will delete all DriveRPC configuration and cached data. Continue?";
             dialog.PrimaryButtonText = "Yes";
             dialog.SecondaryButtonText = "No";
 
@@ -142,13 +156,19 @@ namespace DriveRPC.Shared.UWP.Views
 
             try
             {
-
+                await _vm.ResetAllAsync();
+#if UWP1507
+                await ShowSimpleDialogAsync("Restart Required", "The app will now close. Please restart it to apply the reset.");
+                Application.Current.Exit();
+#else
+                await ShowSimpleDialogAsync("Restarting", "The app will now restart to apply the reset.");
+                await CoreApplication.RequestRestartAsync("");
+#endif
             }
-            catch (Exception ex)
-            {
-                await ShowSimpleDialogAsync("Error", ex.Message);
-            }
+            catch (Exception ex) { await ShowSimpleDialogAsync("Error", ex.Message); }
         }
+
+        protected virtual ContentDialog CreateDialog() => new ContentDialog();
 
         protected async Task ShowSimpleDialogAsync(string title, string content)
         {
@@ -159,6 +179,55 @@ namespace DriveRPC.Shared.UWP.Views
             await dialog.ShowAsync();
         }
 
+        protected PasswordBox TokenBox => FindName("TokenBox") as PasswordBox;
+        protected CheckBox ShowTokenCheck => FindName("ShowTokenCheck") as CheckBox;
+        protected TextBlock TokenValidationText => FindName("TokenValidationText") as TextBlock;
+
+        protected void SetAppearance(AppearanceMode mode)
+        {
+            AppearanceService.Set(mode);
+            ApplyAppearanceWithoutRestart();
+        }
+
+        protected void ApplyAppearanceWithoutRestart()
+        {
+            var window = Window.Current;
+            window.Content = null;
+            var appResources = Application.Current.Resources;
+            appResources.MergedDictionaries.Clear();
+
+            switch (AppearanceService.Current)
+            {
+                case AppearanceMode.Win11:
+                    appResources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("ms-appx:///Themes/Win11.xaml") });
+                    break;
+                case AppearanceMode.Win10_1709:
+                    appResources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("ms-appx:///Themes/Win10_1709.xaml") });
+                    break;
+                default:
+                    appResources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("ms-appx:///Themes/Win10_1507.xaml") });
+                    break;
+            }
+
+            var frame = new Frame();
+            window.Content = frame;
+            frame.Navigate(NavigationHelper.GetPageType("Shell"), null);
+            window.Activate();
+        }
+
+        protected static AppearanceMode TagToMode(string tag)
+        {
+            if (tag == "1709") return AppearanceMode.Win10_1709;
+            if (tag == "11") return AppearanceMode.Win11;
+            return AppearanceMode.Win10_1507;
+        }
+
+        protected static string ModeToTag(AppearanceMode mode)
+        {
+            if (mode == AppearanceMode.Win10_1709) return "1709";
+            if (mode == AppearanceMode.Win11) return "11";
+            return "1507";
+        }
         protected async void AboutButton_Click(object sender, RoutedEventArgs e)
         {
             var scrollContent = new ScrollViewer
@@ -256,51 +325,5 @@ namespace DriveRPC.Shared.UWP.Views
             dialog.PrimaryButtonText = "I Understand";
             await dialog.ShowAsync();
         }
-
-        protected async void TokenBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (_loading) return;
-
-            var token = TokenBox.Password;
-
-            if (string.IsNullOrWhiteSpace(token))
-                return;
-
-            await _vm.SaveTokenAsync(token);
-        }
-
-        protected void ShowTokenCheck_Checked(object sender, RoutedEventArgs e)
-        {
-            TokenBox.PasswordRevealMode = PasswordRevealMode.Visible;
-        }
-
-        protected void ShowTokenCheck_Unchecked(object sender, RoutedEventArgs e)
-        {
-            TokenBox.PasswordRevealMode = PasswordRevealMode.Hidden;
-        }
-
-        protected async void SaveToken_Click(object sender, RoutedEventArgs e)
-        {
-            var token = TokenBox.Password;
-
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                await ShowSimpleDialogAsync("Invalid Token", "Please enter a valid Discord token.");
-                return;
-            }
-
-            await _vm.SaveTokenAsync(token);
-            await ShowSimpleDialogAsync("Saved", "Your Discord token has been securely stored.");
-        }
-
-        protected async void ClearToken_Click(object sender, RoutedEventArgs e)
-        {
-            await _vm.ResetTokenAsync();
-            TokenBox.Password = "";
-            await ShowSimpleDialogAsync("Cleared", "Your Discord token has been removed.");
-        }
-
-        protected PasswordBox TokenBox => FindName("TokenBox") as PasswordBox;
-        protected CheckBox ShowTokenCheck => FindName("ShowTokenCheck") as CheckBox;
     }
 }

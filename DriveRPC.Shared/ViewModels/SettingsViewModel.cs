@@ -2,21 +2,20 @@
 using DriveRPC.Shared.Services;
 using System.Threading.Tasks;
 using ISecureStorage = DriveRPC.Shared.Services.ISecureStorage;
-#if WINDOWS_UWP
-using Windows.ApplicationModel;
-#endif
 
 namespace DriveRPC.Shared.ViewModels
 {
     public class SettingsViewModel
     {
         private readonly ISecureStorage _secureStorage;
+        private readonly IAppDataResetService _resetService;
 
         public string UserToken { get; set; }
 
-        public SettingsViewModel(ISecureStorage secureStorage)
+        public SettingsViewModel(ISecureStorage secureStorage, IAppDataResetService resetService)
         {
             _secureStorage = secureStorage;
+            _resetService = resetService;
         }
 
         public async Task LoadAsync()
@@ -37,6 +36,11 @@ namespace DriveRPC.Shared.ViewModels
         {
             UserToken = null;
             await _secureStorage.DeleteAsync(SecureStorageKeys.UserToken);
+        }
+
+        public Task ResetAllAsync()
+        {
+            return _resetService.ResetAllAsync();
         }
     }
 }
