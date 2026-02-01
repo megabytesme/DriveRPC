@@ -7,14 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Page.Resources>
-        <Style x:Key="HamburgerButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="48" />
-            <Setter Property="Height" Value="48" />
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
-    </Page.Resources>
-
     <SplitView
         x:Name="RootSplitView"
         CompactPaneLength="48"
@@ -31,7 +23,12 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0">
-                    <Button x:Name="HamburgerButton" Click="HamburgerButton_Click">
+                    <Button
+                        x:Name="HamburgerButton"
+                        Width="48"
+                        Height="48"
+                        Background="Transparent"
+                        Click="HamburgerButton_Click">
                         <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
