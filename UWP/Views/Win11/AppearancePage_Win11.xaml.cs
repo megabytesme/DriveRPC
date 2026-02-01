@@ -1,30 +1,80 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DriveRPC.Shared.Models;
+using DriveRPC.Shared.UWP.Services;
+using DriveRPC.Shared.ViewModels;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
+using System.Threading.Tasks;
+using UWP;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
-
-namespace UWP.Views
+namespace DriveRPC.Shared.UWP.Views
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class AppearancePage_Win11 : Page
+    public sealed partial class AppearancePage_Win11 : AppearancePageBase
     {
         public AppearancePage_Win11()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+
+            var previewGps = App.PreviewGpsService;
+            var rpc = App.RpcController;
+            var store = App.PresetStore;
+            var presetService = App.PresetService;
+
+            var viewModel = new AppearancePageViewModel(
+                previewGps,
+                rpc,
+                store,
+                presetService,
+                App.ReverseGeocoder);
+
+            var statusVm = new StatusViewModel(
+                rpc,
+                new UiThread(),
+                presetService,
+                viewModel,
+                App.GpsService,
+                App.ReverseGeocoder);
+
+            InitializeSharedLogic(
+                viewModel,
+                statusVm,
+                StatusTextBlock,
+                PreviewStatusCard,
+                PresetPivot,
+                ControlsPanel,
+                ReplayControlsPanel,
+                SpeedModeCombo,
+                LocationModeCombo,
+                GpsSourceCombo,
+                ReplaySpeedCombo,
+                ReplaySlider,
+                Row2Grid,
+                ApplyButton,
+                SaveButton,
+                PauseButton,
+                ResumeButton);
+        }
+
+        protected override async Task ApplyGpsSourceToRealServiceAsync()
+        {
+            var realGps = App.GpsService;
+
+            if (ViewModel.SelectedGpsSource == GpsSource.Live)
+            {
+                realGps.StopReplay();
+                await realGps.StartListeningAsync();
+            }
+            else
+            {
+                realGps.StopListening();
+
+                if (ViewModel.ReplayBuffer != null)
+                {
+                    var realStream = new MemoryStream(ViewModel.ReplayBuffer.ToArray());
+                    realStream.Position = 0;
+
+                    await realGps.StartReplayAsync(realStream);
+                }
+            }
         }
     }
 }
