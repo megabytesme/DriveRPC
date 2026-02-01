@@ -1,9 +1,15 @@
-﻿using System;
-using DriveRPC.Shared.UWP.Helpers;
+﻿using DriveRPC.Shared.UWP.Helpers;
 using DriveRPC.Shared.UWP.Models;
 using DriveRPC.Shared.UWP.Services;
+using System;
+#if UWP1507
+using UWP_1507;
+#else
+using UWP;
+#endif
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Media;
 
 namespace DriveRPC.Shared.UWP.Views
@@ -55,24 +61,40 @@ namespace DriveRPC.Shared.UWP.Views
             RootSplitView.IsPaneOpen = !RootSplitView.IsPaneOpen;
         }
 
-        private void NavListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void NavListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (NavListBox.SelectedItem is ListBoxItem item)
+            var listBox = sender as ListBox;
+            if (listBox == null || listBox.SelectedItem == null) return;
+
+            if (listBox.SelectedItem is ListBoxItem item)
             {
-                string tag = item.Tag.ToString();
+                string tag = item.Tag?.ToString();
 
-                Type pageType = null;
+                if (tag == "Account")
+                {
+                    FlyoutBase.ShowAttachedFlyout(item);
 
-                try
-                {
-                    pageType = NavigationHelper.GetPageType(tag);
-                }
-                catch (ArgumentException)
-                {
+                    if (HeaderAccountControl != null)
+                    {
+                        await HeaderAccountControl.SetupAsync(
+#if UWP1507
+                            App.SecureStorage
+#else
+                            App.SecureStorage
+#endif
+                            );
+                    }
+
+                    listBox.SelectedIndex = -1;
                     return;
                 }
+                if (listBox == NavListBox)
+                    BottomNavListBox.SelectedIndex = -1;
+                else
+                    NavListBox.SelectedIndex = -1;
 
-                if (pageType != null)
+                Type pageType = NavigationHelper.GetPageType(tag);
+                if (pageType != null && ContentFrame.CurrentSourcePageType != pageType)
                 {
                     ContentFrame.Navigate(pageType);
                 }

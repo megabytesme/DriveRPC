@@ -29,7 +29,6 @@
               Margin="20,100,20,100">
 
             <controls:StatusCard x:Name="StatusCardControl"
-                                 CornerRadius="12"
                                  Background="{ThemeResource AppBackgroundAcrylic}"/>
         </Grid>
 
