@@ -11,6 +11,8 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
+using static DriveRPC.Shared.UWP.Controls.DiscordAccountControl;
 
 namespace DriveRPC.Shared.UWP.Views
 {
@@ -21,6 +23,7 @@ namespace DriveRPC.Shared.UWP.Views
             this.InitializeComponent();
             ApplyAppearanceStyling();
             NavListBox.SelectedIndex = 0;
+            var authTask = HeaderAccountControl.SetupAsync(App.SecureStorage);
         }
 
         private void ApplyAppearanceStyling()
@@ -98,6 +101,36 @@ namespace DriveRPC.Shared.UWP.Views
                 {
                     ContentFrame.Navigate(pageType);
                 }
+            }
+        }
+
+        private void HeaderAccountControl_UserChanged(object sender, UserChangedEventArgs e)
+        {
+            AccountLoadingRing.IsActive = false;
+
+            if (e.User != null)
+            {
+                DefaultAccountIcon.Visibility = Visibility.Collapsed;
+                AccountProfileEllipse.Visibility = Visibility.Visible;
+                AccountProfileBrush.ImageSource = new BitmapImage(new Uri(e.User.GetAvatarUrl()));
+                AccountNameText.Text = e.User.GetDisplayName();
+            }
+            else
+            {
+                DefaultAccountIcon.Visibility = Visibility.Visible;
+                AccountProfileEllipse.Visibility = Visibility.Collapsed;
+                AccountNameText.Text = "Account";
+            }
+        }
+
+        private void HeaderAccountControl_LoadingStateChanged(object sender, bool isLoading)
+        {
+            AccountLoadingRing.IsActive = isLoading;
+
+            if (isLoading)
+            {
+                DefaultAccountIcon.Visibility = Visibility.Collapsed;
+                AccountProfileEllipse.Visibility = Visibility.Collapsed;
             }
         }
     }

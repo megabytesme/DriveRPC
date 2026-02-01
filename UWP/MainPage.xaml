@@ -43,10 +43,8 @@
                 <StackPanel Grid.Row="0">
                     <Button
                         x:Name="HamburgerButton"
-                        Width="48"
-                        Height="48"
-                        Background="Transparent"
-                        Click="HamburgerButton_Click">
+                        Click="HamburgerButton_Click"
+                        Style="{StaticResource HamburgerButtonStyle}">
                         <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -97,17 +95,38 @@
                     <ListBoxItem x:Name="AccountItem" Tag="Account">
                         <FlyoutBase.AttachedFlyout>
                             <Flyout x:Name="AccountFlyout">
-                                <controls:DiscordAccountControl x:Name="HeaderAccountControl" />
+                                <controls:DiscordAccountControl
+                                    x:Name="HeaderAccountControl"
+                                    LoadingStateChanged="HeaderAccountControl_LoadingStateChanged"
+                                    UserChanged="HeaderAccountControl_UserChanged" />
                             </Flyout>
                         </FlyoutBase.AttachedFlyout>
 
                         <StackPanel Padding="2" Orientation="Horizontal">
+                            <Grid Width="20" Height="20">
+                                <TextBlock
+                                    x:Name="DefaultAccountIcon"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    FontSize="18"
+                                    Text="&#xE77B;" />
+
+                                <Ellipse x:Name="AccountProfileEllipse" Visibility="Collapsed">
+                                    <Ellipse.Fill>
+                                        <ImageBrush x:Name="AccountProfileBrush" Stretch="UniformToFill" />
+                                    </Ellipse.Fill>
+                                </Ellipse>
+
+                                <ProgressRing
+                                    x:Name="AccountLoadingRing"
+                                    Width="16"
+                                    Height="16"
+                                    Foreground="{ThemeResource SystemControlHighlightAccentBrush}"
+                                    IsActive="False" />
+                            </Grid>
                             <TextBlock
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe MDL2 Assets"
-                                FontSize="18"
-                                Text="&#xE77B;" />
-                            <TextBlock
+                                x:Name="AccountNameText"
                                 Margin="16,0,0,0"
                                 VerticalAlignment="Center"
                                 Text="Account" />

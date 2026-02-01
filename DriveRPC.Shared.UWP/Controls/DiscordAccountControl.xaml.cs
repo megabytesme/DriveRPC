@@ -71,6 +71,13 @@ namespace DriveRPC.Shared.UWP.Controls
             _currentToken = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
         }
 
+        public class UserChangedEventArgs : EventArgs
+        {
+            public DiscordUser User { get; set; }
+        }
+
+        public event EventHandler<UserChangedEventArgs> UserChanged;
+
         public void UpdateUserUI(DiscordUser user)
         {
             _user = user;
@@ -88,6 +95,8 @@ namespace DriveRPC.Shared.UWP.Controls
                 UserAvatarBrush.ImageSource = null;
                 BtnManage.Content = "Sign In";
             }
+
+            UserChanged?.Invoke(this, new UserChangedEventArgs { User = user });
         }
 
         protected async void BtnManage_Click(object sender, RoutedEventArgs e)
@@ -231,8 +240,18 @@ namespace DriveRPC.Shared.UWP.Controls
             await dialog.ShowAsync();
         }
 
+        public event EventHandler<bool> LoadingStateChanged;
+
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set { _isLoading = value; LoadingStateChanged?.Invoke(this, value); }
+        }
+
         private async Task RefreshUserProfileAsync(string token)
         {
+            IsLoading = true;
             try
             {
                 using (var client = new HttpClient())
@@ -241,13 +260,19 @@ namespace DriveRPC.Shared.UWP.Controls
                     var response = await client.GetAsync("https://discord.com/api/v9/users/@me");
                     if (response.IsSuccessStatusCode)
                     {
-                        UpdateUserUI(JsonConvert.DeserializeObject<DiscordUser>(await response.Content.ReadAsStringAsync()));
-                        return;
+                        var json = await response.Content.ReadAsStringAsync();
+                        UpdateUserUI(JsonConvert.DeserializeObject<DiscordUser>(json));
                     }
                 }
             }
-            catch { }
-            UpdateUserUI(null);
+            catch
+            {
+                UpdateUserUI(null);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         protected enum TokenFormat { Invalid, V1, V2, MFA }
