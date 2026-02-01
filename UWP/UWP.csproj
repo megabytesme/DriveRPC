@@ -120,9 +120,6 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Views\Controls\StatusCard.xaml.cs">
-      <DependentUpon>StatusCard.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\Win10_1507\AppearancePage_Win10_1507.xaml.cs">
       <DependentUpon>AppearancePage_Win10_1507.xaml</DependentUpon>
     </Compile>
@@ -235,10 +232,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\Controls\StatusCard.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Views\Win10_1507\AppearancePage_Win10_1507.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -296,6 +289,9 @@
     <PackageReference Include="ZXing.Net">
       <Version>0.16.11</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Views\Controls\" />
   </ItemGroup>
   <Import Project="..\DriveRPC.Shared\DriveRPC.Shared.projitems" Label="Shared" />
   <Import Project="..\DriveRPC.Shared.UWP\DriveRPC.Shared.UWP.projitems" Label="Shared" />
