@@ -1,4 +1,4 @@
-﻿using DriveRPC.Shared.UWP.Services;
+﻿using DriveRPC.Shared.Services;
 using System;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Xaml;
