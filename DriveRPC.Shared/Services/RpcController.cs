@@ -73,6 +73,7 @@ namespace DriveRPC.Shared.Services
             _secureStorage = secureStorage;
             _fileCache = fileCache;
             _socketFactory = socketFactory;
+            _rest = new DiscordRestClient();
         }
 
         public async Task StartAsync()
@@ -94,7 +95,6 @@ namespace DriveRPC.Shared.Services
                 }
 
                 _socket = _socketFactory();
-                _rest = new DiscordRestClient();
 
                 var options = new DiscordConnectionOptions
                 {
