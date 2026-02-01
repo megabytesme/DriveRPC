@@ -12,6 +12,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Controls\DiscordQrLoginControl.xaml.cs">
       <DependentUpon>DiscordQrLoginControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\DiscordAccountControl.xaml.cs">
+      <DependentUpon>DiscordAccountControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\NullToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\BackgroundKeeper.cs" />
@@ -32,6 +35,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="$(MSBuildThisFileDirectory)Controls\DiscordQrLoginControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Controls\DiscordAccountControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
