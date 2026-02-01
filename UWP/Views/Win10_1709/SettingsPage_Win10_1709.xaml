@@ -1,14 +1,101 @@
-﻿<Page
-    x:Class="UWP.Views.SettingsPage_Win10_1709"
+﻿<page:SettingsPageBase
+    x:Class="DriveRPC.Shared.UWP.Views.SettingsPage_Win10_1709"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:DriveRPC.Shared.UWP.Views"
+    xmlns:controls="using:DriveRPC.Shared.UWP.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    xmlns:page="using:DriveRPC.Shared.UWP.Views"
+    Background="{ThemeResource AppBackgroundAcrylic}"
+    mc:Ignorable="d">
 
-    <Grid>
+    <Page.Resources>
+        <Style x:Key="GroupPanelStyle" TargetType="StackPanel">
+            <Setter Property="Background" Value="{ThemeResource SystemControlAcrylicElementBrush}" />
+            <Setter Property="Padding" Value="15" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+    </Page.Resources>
 
-    </Grid>
-</Page>
+    <ScrollViewer Padding="20">
+        <StackPanel MaxWidth="800" HorizontalAlignment="Center">
+
+            <TextBlock
+                Margin="0,0,0,15"
+                Style="{StaticResource TitleTextBlockStyle}"
+                Text="Settings" />
+
+            <StackPanel
+                BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                BorderThickness="1"
+                Style="{StaticResource GroupPanelStyle}">
+                <controls:DiscordAccountControl x:Name="AccountControl" />
+            </StackPanel>
+
+            <StackPanel
+                x:Name="AppearanceStackPanel"
+                BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                BorderThickness="1"
+                Style="{StaticResource GroupPanelStyle}">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
+                    Text="Appearance" />
+                <RadioButton
+                    Checked="AppearanceRadio_Checked"
+                    Content="Windows 10 (1507)"
+                    GroupName="AppearanceGroup"
+                    Tag="1507" />
+                <RadioButton
+                    Checked="AppearanceRadio_Checked"
+                    Content="Windows 10 (1709)"
+                    GroupName="AppearanceGroup"
+                    IsChecked="True"
+                    Tag="1709" />
+                <RadioButton
+                    Checked="AppearanceRadio_Checked"
+                    Content="Windows 11"
+                    GroupName="AppearanceGroup"
+                    Tag="11" />
+            </StackPanel>
+
+            <StackPanel
+                BorderBrush="Red"
+                BorderThickness="1"
+                Style="{StaticResource GroupPanelStyle}">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    Foreground="Red"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
+                    Text="Advanced" />
+                <Button
+                    x:Name="BtnResetAllSettings"
+                    HorizontalAlignment="Stretch"
+                    Background="DarkRed"
+                    Click="BtnResetAllSettings_Click"
+                    Content="Reset All App Data"
+                    Foreground="White" />
+            </StackPanel>
+
+            <StackPanel
+                BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                BorderThickness="1"
+                Style="{StaticResource GroupPanelStyle}">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
+                    Text="Information" />
+                <Button
+                    Margin="0,0,0,8"
+                    HorizontalAlignment="Stretch"
+                    Click="AboutButton_Click"
+                    Content="About DriveRPC" />
+                <Button
+                    HorizontalAlignment="Stretch"
+                    Click="DisclaimerButton_Click"
+                    Content="Disclaimer &amp; Legal" />
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</page:SettingsPageBase>
