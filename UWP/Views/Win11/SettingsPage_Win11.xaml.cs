@@ -1,30 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using DriveRPC.Shared.UWP.Services;
+using System;
+using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using UWP;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
-
-namespace UWP.Views
+namespace DriveRPC.Shared.UWP.Views
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class SettingsPage_Win11 : Page
+    public sealed partial class SettingsPage_Win11 : SettingsPageBase
     {
         public SettingsPage_Win11()
+            : base(App.SecureStorage, App.AppDataReset)
         {
-            this.InitializeComponent();
+            try
+            {
+                InitializeComponent();
+                _ = LoadAllAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[SettingsPage_Win10_1507] Init Failed: " + ex);
+            }
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+#if UWP1709
+            try
+            {
+                string tag = SettingsPageBase.ModeToTag(AppearanceService.Current);
+                _suppressAppearanceChange = true;
+                foreach (var rb in AppearanceStackPanel.Children.OfType<RadioButton>())
+                    rb.IsChecked = (string)rb.Tag == tag;
+                _suppressAppearanceChange = false;
+            }
+            catch { _suppressAppearanceChange = false; }
+#else
+            AppearanceStackPanel.Visibility = Visibility.Collapsed;
+#endif
         }
     }
 }
