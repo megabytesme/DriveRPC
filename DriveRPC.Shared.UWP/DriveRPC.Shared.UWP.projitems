@@ -17,7 +17,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\BackgroundKeeper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\NavigationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\RemoteAuthService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\LocationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\NavigationFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileSystem.cs" />

@@ -27,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\PresenceUpdateService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\NominatimReverseGeocoder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ILocationService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\RemoteAuthService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\RpcController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SensorRecorder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\AppearancePageViewModel.cs" />
