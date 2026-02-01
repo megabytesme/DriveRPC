@@ -16,154 +16,130 @@ namespace DriveRPC.Shared.UWP.Services
         public FileSystem()
         {
             _root = ApplicationData.Current.LocalFolder;
-            Debug.WriteLine($"[FileSystem] Initialized. Root = {_root.Path}");
         }
 
         public string AppDataDirectory => _root.Path;
 
         public string Combine(params string[] parts)
         {
-            var combined = Path.Combine(parts);
-            return combined;
+            var validParts = parts?.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray() ?? new string[0];
+            return Path.Combine(validParts);
         }
 
-        private string GetRelativePath(string fullPath)
+        private string GetRelativePath(string path)
         {
-            if (fullPath.StartsWith(_root.Path, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+
+            string normalizedPath = path.Replace("/", "\\");
+            string normalizedRoot = _root.Path.Replace("/", "\\");
+
+            if (normalizedPath.Equals(normalizedRoot, StringComparison.OrdinalIgnoreCase))
+                return string.Empty;
+
+            if (normalizedPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
             {
-                return fullPath.Substring(_root.Path.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                normalizedPath = normalizedPath.Remove(0, normalizedRoot.Length);
             }
-            return fullPath;
+
+            return normalizedPath.TrimStart('\\');
+        }
+
+        private async Task<StorageFolder> GetTargetFolderAsync(string relativePath, bool create = false)
+        {
+            if (string.IsNullOrEmpty(relativePath) || relativePath == ".") return _root;
+
+            var parts = relativePath.Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            StorageFolder current = _root;
+
+            foreach (var part in parts)
+            {
+                if (create)
+                    current = await current.CreateFolderAsync(part, CreationCollisionOption.OpenIfExists);
+                else
+                    current = await current.GetFolderAsync(part);
+            }
+            return current;
         }
 
         public async Task<bool> FileExistsAsync(string path)
         {
-            string relativePath = GetRelativePath(path);
-
             try
             {
-                await StorageFile.GetFileFromPathAsync(path);
-
-                Debug.WriteLine($"[FileSystem] Exists: YES ({relativePath})");
+                string rel = GetRelativePath(path);
+                var folder = await GetTargetFolderAsync(Path.GetDirectoryName(rel));
+                await folder.GetFileAsync(Path.GetFileName(rel));
                 return true;
             }
-            catch (FileNotFoundException)
-            {
-                Debug.WriteLine($"[FileSystem] Exists: NO ({relativePath})");
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[FileSystem] Exists: ERROR ({relativePath}) → {ex.Message}");
-                return false;
-            }
-        }
-
-        public async Task<string> ReadTextAsync(string path)
-        {
-            try
-            {
-                var file = await StorageFile.GetFileFromPathAsync(path);
-                var text = await FileIO.ReadTextAsync(file);
-                return text;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[FileSystem] Read FAILED ({path}) → {ex.Message}");
-                throw;
-            }
+            catch { return false; }
         }
 
         public async Task WriteTextAsync(string path, string content)
         {
-            string relativePath = GetRelativePath(path);
-            Debug.WriteLine($"[FileSystem] WriteTextAsync → {relativePath}");
-
-            try
-            {
-                StorageFolder targetFolder = _root;
-                string folderName = Path.GetDirectoryName(relativePath);
-                string fileName = Path.GetFileName(relativePath);
-
-                if (!string.IsNullOrEmpty(folderName))
-                {
-                    targetFolder = await _root.GetFolderAsync(folderName);
-                }
-
-                var file = await targetFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
-                await FileIO.WriteTextAsync(file, content);
-
-                Debug.WriteLine($"[FileSystem] Write OK ({fileName})");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[FileSystem] Write FAILED ({relativePath}) → {ex}");
-                throw;
-            }
+            string rel = GetRelativePath(path);
+            var folder = await GetTargetFolderAsync(Path.GetDirectoryName(rel), true);
+            var file = await folder.CreateFileAsync(Path.GetFileName(rel), CreationCollisionOption.ReplaceExisting);
+            await FileIO.WriteTextAsync(file, content);
         }
 
-        public async Task CreateFolderAsync(string folder)
+        public async Task<string> ReadTextAsync(string path)
         {
-            string relativePath = GetRelativePath(folder);
-            Debug.WriteLine($"[FileSystem] CreateFolderAsync → {relativePath}");
-
-            try
-            {
-                await _root.CreateFolderAsync(relativePath, CreationCollisionOption.OpenIfExists);
-                Debug.WriteLine($"[FileSystem] Folder OK ({relativePath})");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[FileSystem] CreateFolder FAILED ({relativePath}) → {ex}");
-                throw;
-            }
+            string rel = GetRelativePath(path);
+            var folder = await GetTargetFolderAsync(Path.GetDirectoryName(rel));
+            var file = await folder.GetFileAsync(Path.GetFileName(rel));
+            return await FileIO.ReadTextAsync(file);
         }
 
-        public async Task<IEnumerable<string>> GetFilesAsync(string folder)
+        public async Task<IEnumerable<string>> GetFilesAsync(string folderPath)
         {
-            string relativePath = GetRelativePath(folder);
-            Debug.WriteLine($"[FileSystem] GetFilesAsync → {relativePath}");
-
             try
             {
-                var f = await _root.GetFolderAsync(relativePath);
-                var items = await f.GetFilesAsync();
-                return items.Select(i => i.Path);
+                var folder = await GetTargetFolderAsync(GetRelativePath(folderPath));
+                var files = await folder.GetFilesAsync();
+                return files.Select(f => f.Path);
             }
-            catch (Exception ex)
+            catch { return Enumerable.Empty<string>(); }
+        }
+
+        public async Task<IEnumerable<string>> GetFoldersAsync(string folderPath)
+        {
+            try
             {
-                Debug.WriteLine($"[FileSystem] GetFiles FAILED ({relativePath}) → {ex}");
-                throw;
+                var folder = await GetTargetFolderAsync(GetRelativePath(folderPath));
+                var folders = await folder.GetFoldersAsync();
+                return folders.Select(f => f.Path);
             }
+            catch { return Enumerable.Empty<string>(); }
         }
 
         public async Task DeleteFileAsync(string path)
         {
             try
             {
-                var file = await StorageFile.GetFileFromPathAsync(path);
+                string rel = GetRelativePath(path);
+                var folder = await GetTargetFolderAsync(Path.GetDirectoryName(rel));
+                var file = await folder.GetFileAsync(Path.GetFileName(rel));
                 await file.DeleteAsync();
-                Debug.WriteLine($"[FileSystem] Delete OK ({path})");
             }
-            catch (FileNotFoundException) { }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[FileSystem] Delete FAILED ({path}) → {ex.Message}");
-            }
+            catch { }
         }
+
+        public async Task CreateFolderAsync(string folder)
+            => await GetTargetFolderAsync(GetRelativePath(folder), true);
 
         public async Task DeleteFolderAsync(string folder, bool recursive = true)
         {
-            string relativePath = GetRelativePath(folder);
             try
             {
-                var f = await _root.GetFolderAsync(relativePath);
-                await f.DeleteAsync(recursive ? StorageDeleteOption.PermanentDelete : StorageDeleteOption.Default);
+                string rel = GetRelativePath(folder);
+                if (string.IsNullOrEmpty(rel)) return;
+
+                var target = await GetTargetFolderAsync(rel);
+                await target.DeleteAsync(StorageDeleteOption.PermanentDelete);
             }
             catch (FileNotFoundException) {  }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[FileSystem] DeleteFolder FAILED ({folder}) → {ex.Message}");
+                Debug.WriteLine($"[FileSystem] DeleteFolder FAILED → {ex.Message}");
             }
         }
     }
