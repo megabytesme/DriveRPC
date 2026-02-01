@@ -19,6 +19,7 @@
       <DependentUpon>StatusCard.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Converters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\StringToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\NullToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\BackgroundKeeper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\NavigationHelper.cs" />
