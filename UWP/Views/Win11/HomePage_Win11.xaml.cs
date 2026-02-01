@@ -1,6 +1,8 @@
 ﻿using DriveRPC.Shared.UWP.Services;
 using DriveRPC.Shared.ViewModels;
 using UWP;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 namespace DriveRPC.Shared.UWP.Views
 {
@@ -9,6 +11,12 @@ namespace DriveRPC.Shared.UWP.Views
         public HomePage_Win11()
         {
             InitializeComponent();
+
+            var internalBorder = StatusCardControl.FindName("RootBorder") as Border;
+            if (internalBorder != null)
+            {
+                internalBorder.CornerRadius = new CornerRadius(8);
+            }
 
             var viewModel = new StatusViewModel(
                 App.RpcController,

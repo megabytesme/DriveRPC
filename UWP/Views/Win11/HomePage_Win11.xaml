@@ -41,23 +41,15 @@
                 Visibility="{x:Bind ViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
         </CommandBar>
 
-        <Grid Grid.Row="1" Margin="24">
-            <Border
-                x:Name="CardWrapper"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Background="{ThemeResource LayerFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="12"
-                Visibility="{x:Bind CardViewModel.ActivityName, Mode=OneWay, Converter={StaticResource StringToVis}}">
-
-                <Border.Shadow>
-                    <ThemeShadow />
-                </Border.Shadow>
-
-                <controls:StatusCard x:Name="StatusCardControl" Margin="0" />
-            </Border>
+        <Grid
+            Grid.Row="1"
+            Margin="20,100,20,100"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+            <controls:StatusCard
+                x:Name="StatusCardControl"
+                Background="Transparent"
+                Visibility="{x:Bind CardViewModel.ActivityName, Mode=OneWay, Converter={StaticResource StringToVis}}" />
         </Grid>
 
         <Border Grid.Row="2" Padding="16,8">

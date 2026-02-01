@@ -9,6 +9,7 @@
     </UserControl.Resources>
 
     <Border
+        x:Name="RootBorder"
         MinWidth="320"
         MaxWidth="420"
         HorizontalAlignment="Center"

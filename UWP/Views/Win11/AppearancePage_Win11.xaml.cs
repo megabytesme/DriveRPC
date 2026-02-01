@@ -4,7 +4,9 @@ using DriveRPC.Shared.ViewModels;
 using System.IO;
 using System.Threading.Tasks;
 using UWP;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 
 namespace DriveRPC.Shared.UWP.Views
 {
@@ -13,6 +15,12 @@ namespace DriveRPC.Shared.UWP.Views
         public AppearancePage_Win11()
         {
             InitializeComponent();
+
+            var internalBorder = PreviewStatusCard.FindName("RootBorder") as Border;
+            if (internalBorder != null)
+            {
+                internalBorder.CornerRadius = new CornerRadius(8);
+            }
 
             var previewGps = App.PreviewGpsService;
             var rpc = App.RpcController;
