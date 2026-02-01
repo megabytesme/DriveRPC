@@ -12,10 +12,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\OSHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\StatusFormatter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Models.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\AppearancePresetStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\FirstRunService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\AppDataResetService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IGeocodingService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\IAppearancePresetStore.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\IRpcController.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\IFileCacheService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\FileCacheService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ISecureStorage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IUiThread.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\SecureStorageKeys.cs" />

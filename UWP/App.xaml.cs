@@ -35,6 +35,11 @@ namespace UWP
         public static IGeocodingService ReverseGeocoder { get; private set; }
         public static RpcController RpcController { get; private set; }
         public static ISecureStorage SecureStorage { get; private set; }
+        public static IFileSystem FileSystem { get; private set; }
+        public static IAppearancePresetStore PresetStore { get; private set; }
+        public static IFileCacheService CacheService { get; private set; }
+        public static FirstRunService FirstRunService { get; private set; }
+        public static IAppDataResetService AppDataReset { get; private set; }
 
 
         /// <summary>
@@ -58,13 +63,27 @@ namespace UWP
             PreviewGpsService = new LocationService();
             PresetService = new ActivePresetService();
             ReverseGeocoder = new NominatimGeocodingService();
-            ReverseGeocoder = new NominatimGeocodingService();
             SecureStorage = new SecureStorage();
+            FileSystem = new FileSystem();
+            PresetStore = new AppearancePresetStore(FileSystem);
+            CacheService = new FileCacheService(FileSystem);
+            FirstRunService = new FirstRunService(FileSystem);
+            AppDataReset = new AppDataResetService(
+                SecureStorage,
+                PresetStore,
+                CacheService,
+                FileSystem
+            );
             RpcController = new RpcController(
-                App.SecureStorage, new UwpFileCacheService(),
+                SecureStorage,
+                CacheService,
                 () => new ClientWebSocketAdapter()
             );
-            PresenceUpdater = new PresenceUpdateService(GpsService, RpcController, PresetService);
+            PresenceUpdater = new PresenceUpdateService(
+                GpsService,
+                RpcController,
+                PresetService
+            );
 
             try
             {
@@ -124,7 +143,7 @@ namespace UWP
             {
                 if (rootFrame.Content == null)
                 {
-                    if (FirstRunService.IsFirstRun)
+                    if (FirstRunService.IsFirstRunAsync().GetAwaiter().GetResult())
                     {
                         rootFrame.Navigate(NavigationHelper.GetPageType("OOBE"), e.Arguments);
                     }
