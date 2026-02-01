@@ -8,6 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -97,6 +98,24 @@ namespace DriveRPC.Shared.UWP.Views
 
             Loaded += OnLoaded;
             SizeChanged += OnSizeChanged;
+            this.KeyDown += AppearancePage_KeyDown;
+        }
+
+        private void AppearancePage_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+            var shift = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
+
+            if (ctrl && !shift && e.Key == VirtualKey.S)
+            {
+                e.Handled = true;
+                _ = SaveInternalAsync();
+            }
+            else if (ctrl && shift && e.Key == VirtualKey.S)
+            {
+                e.Handled = true;
+                _ = ApplyInternalAsync();
+            }
         }
 
         private void BuildPresetFlyout()
@@ -637,38 +656,32 @@ namespace DriveRPC.Shared.UWP.Views
             _flyoutTargetPreset = null;
         }
 
-        protected async void Apply_Click(object sender, RoutedEventArgs e)
+        protected abstract Task ApplyGpsSourceToRealServiceAsync();
+
+        protected async void Save_Click(object sender, RoutedEventArgs e) => await SaveInternalAsync();
+        protected async void Apply_Click(object sender, RoutedEventArgs e) => await ApplyInternalAsync();
+
+        private async Task SaveInternalAsync()
         {
-            var currentIndex = _presetPivot.SelectedIndex;
-            if (currentIndex < 0 || currentIndex >= ViewModel.Presets.Count)
-                return;
+            StatusViewModel.IsLiveUpdatingEnabled = false;
+            await SyncAndCommitPresetAsync();
+        }
 
-            var preset = ViewModel.Presets[currentIndex];
-            if (_editingCache.TryGetValue(preset, out var editing))
-                ViewModel.EditingPreset = editing;
-
-            await ViewModel.ApplyChangesAsyncForPresetAsync(preset, ViewModel.EditingPreset);
-
-            var clone = preset.Clone();
-            _editingCache[preset] = clone;
-            ViewModel.EditingPreset = clone;
-
-            WireFieldBindings();
-            UpdatePreviewCard();
-
-            var config = StatusViewModel.BuildRpcConfigFromPreset(preset);
+        private async Task ApplyInternalAsync()
+        {
+            await SyncAndCommitPresetAsync();
 
             StatusViewModel.IsLiveUpdatingEnabled = true;
 
             if (StatusViewModel.IsRunning)
             {
                 await StatusViewModel.StopAsync();
-                await StatusViewModel.StartAsync();
             }
-            else
-            {
-                await StatusViewModel.StartAsync();
-            }
+
+            await StatusViewModel.StartAsync();
+
+            var preset = ViewModel.Presets[_presetPivot.SelectedIndex];
+            var config = StatusViewModel.BuildRpcConfigFromPreset(preset);
 
             await ApplyGpsSourceToRealServiceAsync();
             await StatusViewModel.UpdatePresenceAsync(config);
@@ -676,17 +689,14 @@ namespace DriveRPC.Shared.UWP.Views
             UpdateStatusText();
         }
 
-        protected abstract Task ApplyGpsSourceToRealServiceAsync();
-
-        protected async void Save_Click(object sender, RoutedEventArgs e)
+        private async Task SyncAndCommitPresetAsync()
         {
-            StatusViewModel.IsLiveUpdatingEnabled = false;
-
             var currentIndex = _presetPivot.SelectedIndex;
             if (currentIndex < 0 || currentIndex >= ViewModel.Presets.Count)
                 return;
 
             var preset = ViewModel.Presets[currentIndex];
+
             if (_editingCache.TryGetValue(preset, out var editing))
                 ViewModel.EditingPreset = editing;
 
