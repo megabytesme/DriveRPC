@@ -43,12 +43,5 @@ namespace DriveRPC.Shared.UWP.Views
             AppearanceStackPanel.Visibility = Visibility.Collapsed;
 #endif
         }
-
-        private void AppearanceRadio_Checked(object sender, RoutedEventArgs e)
-        {
-            if (_suppressAppearanceChange) return;
-            if (sender is RadioButton rb && rb.Tag is string tag)
-                SetAppearance(SettingsPageBase.TagToMode(tag));
-        }
     }
 }

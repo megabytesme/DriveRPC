@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Threading.Tasks;
 
 namespace DriveRPC.Shared.Models
@@ -106,5 +107,47 @@ namespace DriveRPC.Shared.Models
         public string Road { get; set; }
 
         public int? SpeedLimitKmh { get; set; }
+    }
+
+    public class DiscordUser
+    {
+        [JsonProperty("id")]
+        public string Id { get; set; }
+        [JsonProperty("username")]
+        public string Username { get; set; }
+        [JsonProperty("discriminator")]
+        public string Discriminator { get; set; }
+        [JsonProperty("global_name")]
+        public string GlobalName { get; set; }
+        [JsonProperty("avatar")]
+        public string Avatar { get; set; }
+
+        public bool IsPomelo => Discriminator == "0" || string.IsNullOrEmpty(Discriminator);
+
+        public string GetDisplayName() => (IsPomelo && !string.IsNullOrEmpty(GlobalName)) ? GlobalName : Username;
+
+        public string GetHandle() => IsPomelo ? $"@{Username}" : $"{Username}#{Discriminator}";
+
+        public string GetAvatarUrl(int size = 128)
+        {
+            if (string.IsNullOrEmpty(Avatar))
+            {
+                long index = 0;
+                if (IsPomelo)
+                {
+                    if (long.TryParse(Id, out long idVal))
+                        index = (idVal >> 22) % 6;
+                }
+                else
+                {
+                    if (uint.TryParse(Discriminator, out uint disVal))
+                        index = disVal % 5;
+                }
+                return $"https://cdn.discordapp.com/embed/avatars/{index}.png";
+            }
+
+            string ext = Avatar.StartsWith("a_") ? "gif" : "png";
+            return $"https://cdn.discordapp.com/avatars/{Id}/{Avatar}.{ext}?size={size}";
+        }
     }
 }
