@@ -1,29 +1,118 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace DriveRPC.Shared.Models
 {
-    public class AppearancePreset
+    public class AppearancePreset : INotifyPropertyChanged
     {
-        public string Name { get; set; }
-        public string CarName { get; set; }
-        public string CarImageUrl { get; set; }
-        public string CarImageText { get; set; }
-        public string SmallImageUrl { get; set; }
-        public string SmallImageText { get; set; }
+        private string _name;
+        private string _carName;
+        private string _carImageUrl;
+        private string _carImageText;
+        private string _smallImageUrl;
+        private string _smallImageText;
+        private SpeedLodMode _speedMode;
+        private LocationLodMode _locationMode;
+        private bool _showCompass;
+        private SpeedUnit _speedUnit = SpeedUnit.Auto;
+        private int _seatCount = 1;
+        private int _seatsUsed = 1;
+        private bool _showParty = false;
+        private string _cachedLargeImageKey;
+        private string _cachedSmallImageKey;
 
-        public SpeedLodMode SpeedMode { get; set; }
-        public LocationLodMode LocationMode { get; set; }
-        public bool ShowCompass { get; set; }
-        public SpeedUnit SpeedUnit { get; set; } = SpeedUnit.Auto;
+        public string Name
+        {
+            get => _name;
+            set { _name = value; OnPropertyChanged(); }
+        }
 
-        public int SeatCount { get; set; } = 1;
-        public int SeatsUsed { get; set; } = 1;
-        public bool ShowParty { get; set; } = false;
+        public string CarName
+        {
+            get => _carName;
+            set { _carName = value; OnPropertyChanged(); }
+        }
 
-        public string CachedLargeImageKey { get; set; }
-        public string CachedSmallImageKey { get; set; }
+        public string CarImageUrl
+        {
+            get => _carImageUrl;
+            set { _carImageUrl = value; OnPropertyChanged(); }
+        }
+
+        public string CarImageText
+        {
+            get => _carImageText;
+            set { _carImageText = value; OnPropertyChanged(); }
+        }
+
+        public string SmallImageUrl
+        {
+            get => _smallImageUrl;
+            set { _smallImageUrl = value; OnPropertyChanged(); }
+        }
+
+        public string SmallImageText
+        {
+            get => _smallImageText;
+            set { _smallImageText = value; OnPropertyChanged(); }
+        }
+
+        public SpeedLodMode SpeedMode
+        {
+            get => _speedMode;
+            set { _speedMode = value; OnPropertyChanged(); }
+        }
+
+        public LocationLodMode LocationMode
+        {
+            get => _locationMode;
+            set { _locationMode = value; OnPropertyChanged(); }
+        }
+
+        public bool ShowCompass
+        {
+            get => _showCompass;
+            set { _showCompass = value; OnPropertyChanged(); }
+        }
+
+        public SpeedUnit SpeedUnit
+        {
+            get => _speedUnit;
+            set { _speedUnit = value; OnPropertyChanged(); }
+        }
+
+        public int SeatCount
+        {
+            get => _seatCount;
+            set { _seatCount = value; OnPropertyChanged(); }
+        }
+
+        public int SeatsUsed
+        {
+            get => _seatsUsed;
+            set { _seatsUsed = value; OnPropertyChanged(); }
+        }
+
+        public bool ShowParty
+        {
+            get => _showParty;
+            set { _showParty = value; OnPropertyChanged(); }
+        }
+
+        public string CachedLargeImageKey
+        {
+            get => _cachedLargeImageKey;
+            set { _cachedLargeImageKey = value; OnPropertyChanged(); }
+        }
+
+        public string CachedSmallImageKey
+        {
+            get => _cachedSmallImageKey;
+            set { _cachedSmallImageKey = value; OnPropertyChanged(); }
+        }
 
         public AppearancePreset Clone()
         {
@@ -66,6 +155,12 @@ namespace DriveRPC.Shared.Models
             ShowParty = other.ShowParty;
             CachedLargeImageKey = other.CachedLargeImageKey;
             CachedSmallImageKey = other.CachedSmallImageKey;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 

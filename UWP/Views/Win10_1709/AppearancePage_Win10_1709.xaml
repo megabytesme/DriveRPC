@@ -33,9 +33,14 @@
                 ItemsSource="{x:Bind ViewModel.Presets}"
                 RightTapped="PresetPivot_RightTapped"
                 SelectionChanged="PresetPivot_SelectionChanged">
+                <Pivot.HeaderTemplate>
+                    <DataTemplate x:DataType="models:AppearancePreset">
+                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                    </DataTemplate>
+                </Pivot.HeaderTemplate>
                 <Pivot.ItemTemplate>
                     <DataTemplate x:DataType="models:AppearancePreset">
-                        <TextBlock Text="{x:Bind Name}" />
+                        <Grid />
                     </DataTemplate>
                 </Pivot.ItemTemplate>
             </Pivot>
