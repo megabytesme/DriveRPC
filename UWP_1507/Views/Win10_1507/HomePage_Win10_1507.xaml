@@ -10,6 +10,7 @@
     <Page.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BoolToVis" />
         <converters:BooleanToVisibilityConverter x:Key="BoolToVis_Inverted" Invert="True" />
+        <converters:StringToVisibilityConverter x:Key="StringToVis" />
     </Page.Resources>
 
     <Grid>
@@ -24,11 +25,10 @@
         </StackPanel>
 
         <Grid
-            Margin="20,80,20,80"
+            Margin="20,100,20,100"
             HorizontalAlignment="Center"
             VerticalAlignment="Center">
-
-            <controls:StatusCard x:Name="StatusCardControl" />
+            <controls:StatusCard x:Name="StatusCardControl" Visibility="{x:Bind CardViewModel.ActivityName, Mode=OneWay, Converter={StaticResource StringToVis}}" />
         </Grid>
 
         <CommandBar VerticalAlignment="Bottom">
