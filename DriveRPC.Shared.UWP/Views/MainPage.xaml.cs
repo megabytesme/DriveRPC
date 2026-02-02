@@ -23,7 +23,6 @@ namespace DriveRPC.Shared.UWP.Views
             this.InitializeComponent();
             ApplyAppearanceStyling();
             NavListBox.SelectedIndex = 0;
-            var authTask = HeaderAccountControl.SetupAsync(App.SecureStorage);
         }
 
         private void ApplyAppearanceStyling()
@@ -76,17 +75,6 @@ namespace DriveRPC.Shared.UWP.Views
                 if (tag == "Account")
                 {
                     FlyoutBase.ShowAttachedFlyout(item);
-
-                    if (HeaderAccountControl != null)
-                    {
-                        await HeaderAccountControl.SetupAsync(
-#if UWP1507
-                            App.SecureStorage
-#else
-                            App.SecureStorage
-#endif
-                            );
-                    }
 
                     listBox.SelectedIndex = -1;
                     return;

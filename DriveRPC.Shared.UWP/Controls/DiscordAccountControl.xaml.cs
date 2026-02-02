@@ -3,7 +3,6 @@ using DriveRPC.Shared.Services;
 using DriveRPC.Shared.UWP.Helpers;
 using Newtonsoft.Json;
 using System;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.UI;
@@ -12,6 +11,9 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+#if UWP1709
+using UWP;
+#endif
 
 namespace DriveRPC.Shared.UWP.Controls
 {
@@ -20,18 +22,20 @@ namespace DriveRPC.Shared.UWP.Controls
         public DiscordAccountControl()
         {
             this.InitializeComponent();
+
+#if UWP1507
+            _secureStorage = UWP_1507.App.SecureStorage;
+#else
+            _secureStorage = App.SecureStorage;
+#endif
+
+            this.Loaded += async (s, e) => await Initialize();
         }
 
         private ISecureStorage _secureStorage;
 
         private string _currentToken;
         private DiscordUser _user;
-
-        public async Task SetupAsync(ISecureStorage secureStorage)
-        {
-            _secureStorage = secureStorage;
-            await Initialize();
-        }
 
         public async Task Initialize()
         {
@@ -252,21 +256,33 @@ namespace DriveRPC.Shared.UWP.Controls
         private async Task RefreshUserProfileAsync(string token)
         {
             IsLoading = true;
+
             try
             {
-                using (var client = new HttpClient())
+                var filter = new Windows.Web.Http.Filters.HttpBaseProtocolFilter();
+                var client = new Windows.Web.Http.HttpClient(filter);
+
+                client.DefaultRequestHeaders.Add("Authorization", token);
+                client.DefaultRequestHeaders.Add("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36");
+
+                var uri = new Uri("https://discord.com/api/v9/users/@me");
+
+                var response = await client.GetAsync(uri);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    client.DefaultRequestHeaders.Add("Authorization", token);
-                    var response = await client.GetAsync("https://discord.com/api/v9/users/@me");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var json = await response.Content.ReadAsStringAsync();
-                        UpdateUserUI(JsonConvert.DeserializeObject<DiscordUser>(json));
-                    }
+                    var json = await response.Content.ReadAsStringAsync();
+                    UpdateUserUI(JsonConvert.DeserializeObject<DiscordUser>(json));
+                }
+                else
+                {
+                    UpdateUserUI(null);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine("[ACCOUNT] Exception: " + ex);
                 UpdateUserUI(null);
             }
             finally

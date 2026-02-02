@@ -17,7 +17,6 @@ namespace DriveRPC.Shared.UWP.Views
             try
             {
                 InitializeComponent();
-                _ = LoadAllAsync();
             }
             catch (Exception ex)
             {

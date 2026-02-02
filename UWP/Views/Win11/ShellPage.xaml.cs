@@ -20,8 +20,6 @@ namespace UWP.Views
                 NavView.SelectedItem = NavView.MenuItems[0];
                 NavigateTo("Home");
             }
-
-            var authTask = HeaderAccountControl.SetupAsync(App.SecureStorage);
         }
 
         private void NavView_SelectionChanged(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs args)

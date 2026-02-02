@@ -1,25 +1,17 @@
-﻿using DriveRPC.Shared.Models;
-using DriveRPC.Shared.Services;
+﻿using DriveRPC.Shared.Services;
 using DriveRPC.Shared.UWP.Controls;
 using DriveRPC.Shared.UWP.Helpers;
 using DriveRPC.Shared.UWP.Models;
 using DriveRPC.Shared.UWP.Services;
 using DriveRPC.Shared.ViewModels;
-using Newtonsoft.Json;
 using System;
-using System.Diagnostics;
-using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Foundation.Metadata;
-using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
 
 namespace DriveRPC.Shared.UWP.Views
 {
@@ -35,18 +27,6 @@ namespace DriveRPC.Shared.UWP.Views
         {
             _secureStorage = secureStorage;
             _vm = new SettingsViewModel(appDataResetService);
-        }
-
-        protected async Task LoadAllAsync()
-        {
-            _loading = true;
-
-            if (AccountControl != null)
-            {
-                await AccountControl.SetupAsync(_secureStorage);
-            }
-
-            _loading = false;
         }
 
         protected async void AppearanceRadio_Checked(object sender, RoutedEventArgs e)
