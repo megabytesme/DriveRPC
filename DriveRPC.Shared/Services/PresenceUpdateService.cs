@@ -1,12 +1,33 @@
 ﻿using DriveRPC.Shared.Helpers;
 using DriveRPC.Shared.Models;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using UserPresenceRPC.Discord.Net.Interfaces;
 
 namespace DriveRPC.Shared.Services
 {
-    public class PresenceUpdateService
+    public sealed class PresenceUpdateService
     {
+        private static PresenceUpdateService _instance;
+        public static PresenceUpdateService Instance => _instance;
+
+        public static void Initialize(
+            ILocationService gps,
+            IRpcController rpc,
+            ActivePresetService presetService,
+            IHttpHandler httpHandler)
+        {
+            if (_instance != null)
+                return;
+
+            _instance = new PresenceUpdateService(
+                gps,
+                rpc,
+                presetService,
+                new NominatimReverseGeocoder(httpHandler));
+        }
+        
         private readonly ILocationService _gps;
         private readonly IRpcController _rpc;
         private readonly ActivePresetService _presetService;
@@ -19,15 +40,13 @@ namespace DriveRPC.Shared.Services
         private DateTimeOffset _lastUpdate = DateTimeOffset.MinValue;
         private static readonly TimeSpan MinInterval = TimeSpan.FromSeconds(3);
 
-        public PresenceUpdateService(
-            ILocationService gps,
-            IRpcController rpc,
-            ActivePresetService presetService)
-            : this(gps, rpc, presetService, new NominatimReverseGeocoder())
-        {
-        }
+        private bool _locationDirty;
+        private bool _running;
+        private CancellationTokenSource _cts;
 
-        public PresenceUpdateService(
+        private DateTimeOffset _lastGpsConsume;
+        
+        private PresenceUpdateService(
             ILocationService gps,
             IRpcController rpc,
             ActivePresetService presetService,
@@ -38,20 +57,77 @@ namespace DriveRPC.Shared.Services
             _presetService = presetService;
             _reverseGeocoder = reverseGeocoder;
 
-            _gps.LocationUpdated += async (s, e) => await UpdatePresenceAsync();
-            _gps.ReplayTimeChanged += async (s, t) => await UpdatePresenceAsync();
+            _gps.LocationUpdated += (s, e) => _locationDirty = true;
+            _gps.ReplayTimeChanged += (s, t) => _locationDirty = true;
+        }
+        
+        public void Start()
+        {
+            if (_running)
+                return;
+
+            _running = true;
+            _cts = new CancellationTokenSource();
+
+            System.Diagnostics.Debug.WriteLine("[PRESENCE] Starting scheduler loop");
+            _ = PresenceLoopAsync(_cts.Token);
         }
 
+        public void Stop()
+        {
+            if (!_running)
+                return;
+
+            _running = false;
+            _cts?.Cancel();
+        }
+
+        private async Task PresenceLoopAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await Task.Delay(250, token);
+
+                var now = DateTimeOffset.UtcNow;
+
+                if (!_locationDirty)
+                    continue;
+
+                if (!ShouldConsumeGps())
+                    continue;
+
+                if (now - _lastUpdate < MinInterval)
+                    continue;
+
+                _locationDirty = false;
+                await UpdatePresenceAsync();
+            }
+        }
+
+        private bool ShouldConsumeGps()
+        {
+            var now = DateTimeOffset.UtcNow;
+            if (now - _lastGpsConsume < TimeSpan.FromSeconds(1))
+                return false;
+
+            _lastGpsConsume = now;
+            return true;
+        }
+        
         private async Task UpdatePresenceAsync()
         {
             if (_updateInProgress)
                 return;
 
-            var now = DateTimeOffset.UtcNow;
-            if (now - _lastUpdate < MinInterval)
-                return;
-
             _updateInProgress = true;
+
+            var now = DateTimeOffset.UtcNow;
+
+            if (now - _lastUpdate < MinInterval)
+            {
+                _updateInProgress = false;
+                return;
+            }
 
             try
             {
@@ -71,19 +147,23 @@ namespace DriveRPC.Shared.Services
                 }
 
                 var formatter = new StatusFormatter(preset, _lastLocation);
-                var config = formatter.BuildRpcConfig(gps, _rpc.ActivityStartTimestamp, _countryFlagAssetKey);
+                var config = formatter.BuildRpcConfig(
+                    gps,
+                    _rpc.ActivityStartTimestamp,
+                    _countryFlagAssetKey);
 
                 await _rpc.UpdatePresenceAsync(config);
                 _lastUpdate = now;
             }
             catch
-            {}
+            {
+            }
             finally
             {
                 _updateInProgress = false;
             }
         }
-
+        
         private GpsSnapshot BuildSnapshot()
         {
             var loc = _gps.CurrentLocation;
@@ -110,7 +190,8 @@ namespace DriveRPC.Shared.Services
                 return;
 
             var code = _lastLocation.CountryCode.ToUpperInvariant();
-            var url = $"https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Flags/{code.ToLower()}.png";
+            var url =
+                $"https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Flags/{code.ToLower()}.png";
 
             _countryFlagAssetKey = await _rpc.CacheImageAsync(url);
         }

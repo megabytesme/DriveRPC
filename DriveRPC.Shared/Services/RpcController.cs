@@ -37,6 +37,7 @@ namespace DriveRPC.Shared.Services
         private DiscordGatewayClient _gateway;
         private DiscordRestClient _rest;
         private IWebSocketClient _socket;
+        private IHttpHandler _restHandler;
         private readonly Func<IWebSocketClient> _socketFactory;
 
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
@@ -68,12 +69,14 @@ namespace DriveRPC.Shared.Services
         public RpcController(
             ISecureStorage secureStorage,
             IFileCacheService fileCache,
-            Func<IWebSocketClient> socketFactory)
+            Func<IWebSocketClient> socketFactory,
+            Func<IHttpHandler> httpFactory)
         {
             _secureStorage = secureStorage;
             _fileCache = fileCache;
             _socketFactory = socketFactory;
-            _rest = new DiscordRestClient();
+            _restHandler = httpFactory();
+            _rest = new DiscordRestClient(_restHandler);
         }
 
         public async Task StartAsync()
@@ -240,6 +243,8 @@ namespace DriveRPC.Shared.Services
                 CurrentPresence = null;
 
                 PresenceUpdated?.Invoke();
+                _restHandler?.Dispose();
+                _rest = null;
             }
             finally
             {

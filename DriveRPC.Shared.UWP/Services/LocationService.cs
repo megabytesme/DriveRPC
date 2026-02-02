@@ -72,6 +72,8 @@ namespace DriveRPC.Shared.UWP.Services
             set => _filter.Mode = value;
         }
 
+        private DateTimeOffset _lastReplayUpdate;
+
         public LocationService()
         {
             _recorder = new SensorRecorder();
@@ -80,6 +82,9 @@ namespace DriveRPC.Shared.UWP.Services
             {
                 if (_isReplaying)
                 {
+                    if (DateTimeOffset.UtcNow - _lastReplayUpdate < TimeSpan.FromMilliseconds(1000)) return;
+
+                    _lastReplayUpdate = DateTimeOffset.UtcNow;
                     CurrentStatus = DriveRPC.Shared.Models.PositionStatus.Ready;
                     SpeedMetersPerSecond = evt.Speed;
                     var pos = new Vector2((float)evt.Lat, (float)evt.Lon);
@@ -125,7 +130,7 @@ namespace DriveRPC.Shared.UWP.Services
             _isListening = true;
 
             _locator = new Geolocator();
-            SetTrackingMode(TrackingMode.Navigation);
+            SetTrackingMode(TrackingMode.Standard);
             _locator.PositionChanged += OnPositionChanged;
             _locator.StatusChanged += OnStatusChanged;
             CurrentStatus = ConvertStatus(_locator.LocationStatus);
