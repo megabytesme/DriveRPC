@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -31,8 +32,7 @@ namespace UWP_1507
         public static ILocationService GpsService { get; private set; }
         public static ILocationService PreviewGpsService { get; private set; }
         public static ActivePresetService PresetService { get; private set; }
-        public static PresenceUpdateService PresenceUpdater { get; private set; }
-        public static IGeocodingService ReverseGeocoder { get; private set; }
+        public static NominatimReverseGeocoder ReverseGeocoder { get; private set; }
         public static RpcController RpcController { get; private set; }
         public static ISecureStorage SecureStorage { get; private set; }
         public static IFileSystem FileSystem { get; private set; }
@@ -40,7 +40,7 @@ namespace UWP_1507
         public static IFileCacheService CacheService { get; private set; }
         public static FirstRunService FirstRunService { get; private set; }
         public static IAppDataResetService AppDataReset { get; private set; }
-
+        public static PresenceUpdateService Presence => PresenceUpdateService.Instance;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -48,8 +48,15 @@ namespace UWP_1507
         /// </summary>
         public App()
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+
+            TaskScheduler.UnobservedTaskException += (s, e) =>
+            {
+                Debug.WriteLine($"[TASK ERROR] Unobserved: {e.Exception.Message}");
+                e.SetObserved();
+            };
         }
 
         /// <summary>
@@ -57,12 +64,33 @@ namespace UWP_1507
         /// will be used such as when the application is launched to open a specific file.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
             GpsService = new LocationService();
             PreviewGpsService = new LocationService();
             PresetService = new ActivePresetService();
-            ReverseGeocoder = new NominatimGeocodingService();
+
+            var nominatimHttp = new WindowsWebHttpHandler();
+            nominatimHttp.SetHeader(
+                "User-Agent",
+                "DriveRPC/1.0.0 (https://github.com/megabytesme/DriveRPC; contact: 57240557+megabytesme@users.noreply.github.com)"
+            );
+            nominatimHttp.SetHeader(
+                "Referer",
+                "https://github.com/megabytesme/DriveRPC"
+            );
+
+            ReverseGeocoder = new NominatimReverseGeocoder(nominatimHttp);
+
+
+            var discordHttp = new WindowsWebHttpHandler();
+            discordHttp.SetHeader(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            );
+            discordHttp.SetHeader("Origin", "https://discord.com");
+
             SecureStorage = new SecureStorage();
             FileSystem = new FileSystem();
             PresetStore = new AppearancePresetStore(FileSystem);
@@ -74,16 +102,22 @@ namespace UWP_1507
                 CacheService,
                 FileSystem
             );
+
             RpcController = new RpcController(
                 SecureStorage,
                 CacheService,
-                () => new ClientWebSocketAdapter()
+                () => new ClientWebSocketAdapter(),
+                () => discordHttp
             );
-            PresenceUpdater = new PresenceUpdateService(
+
+            PresenceUpdateService.Initialize(
                 GpsService,
                 RpcController,
-                PresetService
+                PresetService,
+                nominatimHttp
             );
+
+            PresenceUpdateService.Instance.Start();
 
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -109,7 +143,7 @@ namespace UWP_1507
             {
                 if (rootFrame.Content == null)
                 {
-                    if (FirstRunService.IsFirstRunAsync().GetAwaiter().GetResult())
+                    if (await FirstRunService.IsFirstRunAsync())
                     {
                         rootFrame.Navigate(NavigationHelper.GetPageType("OOBE"), e.Arguments);
                     }

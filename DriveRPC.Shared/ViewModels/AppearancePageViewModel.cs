@@ -17,7 +17,7 @@ namespace DriveRPC.Shared.ViewModels
         private readonly IRpcController _rpc;
         private readonly IAppearancePresetStore _store;
         private readonly ActivePresetService _presetService;
-        private readonly IGeocodingService _reverseGeocoder;
+        private readonly NominatimReverseGeocoder _reverseGeocoder;
 
         private LocationInfo _lastLocation;
         private string _countryFlagAssetKey;
@@ -116,7 +116,7 @@ namespace DriveRPC.Shared.ViewModels
             IRpcController rpc,
             IAppearancePresetStore store,
             ActivePresetService presetService,
-            IGeocodingService geocoder)
+            NominatimReverseGeocoder geocoder)
         {
             _gps = gps;
             _rpc = rpc;

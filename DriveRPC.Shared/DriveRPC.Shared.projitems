@@ -15,7 +15,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\AppearancePresetStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FirstRunService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\AppDataResetService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\IGeocodingService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileCacheService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ISecureStorage.cs" />
@@ -23,7 +22,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\SecureStorageKeys.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ActivePresetService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\NominatimGeocodingService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\PresenceUpdateService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\NominatimReverseGeocoder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ILocationService.cs" />
