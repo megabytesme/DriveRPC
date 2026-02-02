@@ -283,15 +283,15 @@
     <PackageReference Include="System.ValueTuple">
       <Version>4.6.1</Version>
     </PackageReference>
-    <PackageReference Include="UserPresenceRPC.Discord.Net">
-      <Version>1.0.1</Version>
-    </PackageReference>
     <PackageReference Include="ZXing.Net">
       <Version>0.16.11</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Views\Controls\" />
+    <ProjectReference Include="..\..\UserPresenceRPC.Discord.Net\UserPresenceRPC.Discord.Net\UserPresenceRPC.Discord.Net.csproj">
+      <Project>{80bbbf19-a559-4fef-a2b1-b89e31f09c92}</Project>
+      <Name>UserPresenceRPC.Discord.Net</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\DriveRPC.Shared\DriveRPC.Shared.projitems" Label="Shared" />
   <Import Project="..\DriveRPC.Shared.UWP\DriveRPC.Shared.UWP.projitems" Label="Shared" />

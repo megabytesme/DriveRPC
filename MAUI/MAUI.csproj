@@ -59,8 +59,11 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
-		<PackageReference Include="UserPresenceRPC.Discord.Net" Version="1.0.1" />
 		<PackageReference Include="ZXing.Net" Version="0.16.11" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\UserPresenceRPC.Discord.Net\UserPresenceRPC.Discord.Net\UserPresenceRPC.Discord.Net.csproj" />
 	</ItemGroup>
 
 	<Import Project="..\DriveRPC.Shared\DriveRPC.Shared.projitems" Label="Shared" />
