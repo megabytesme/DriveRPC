@@ -41,6 +41,8 @@ namespace UWP_1507
         public static FirstRunService FirstRunService { get; private set; }
         public static IAppDataResetService AppDataReset { get; private set; }
         public static PresenceUpdateService Presence => PresenceUpdateService.Instance;
+        public static IBackgroundExecutionManager BackgroundManager { get; private set; }
+        public static ISettingsNavigator SettingsNavigator { get; set; } = new UwpSettingsNavigator();
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -69,6 +71,7 @@ namespace UWP_1507
             GpsService = new LocationService();
             PreviewGpsService = new LocationService();
             PresetService = new ActivePresetService();
+            BackgroundManager = new UwpBackgroundExecutionManager();
 
             var nominatimHttp = new WindowsWebHttpHandler();
             nominatimHttp.SetHeader(
@@ -114,7 +117,8 @@ namespace UWP_1507
                 GpsService,
                 RpcController,
                 PresetService,
-                nominatimHttp
+                nominatimHttp,
+                BackgroundManager
             );
 
             PresenceUpdateService.Instance.Start();

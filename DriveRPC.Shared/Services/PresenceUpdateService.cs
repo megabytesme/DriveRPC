@@ -12,11 +12,14 @@ namespace DriveRPC.Shared.Services
         private static PresenceUpdateService _instance;
         public static PresenceUpdateService Instance => _instance;
 
+        private readonly IBackgroundExecutionManager _background;
+
         public static void Initialize(
             ILocationService gps,
             IRpcController rpc,
             ActivePresetService presetService,
-            IHttpHandler httpHandler)
+            IHttpHandler httpHandler,
+            IBackgroundExecutionManager background)
         {
             if (_instance != null)
                 return;
@@ -25,9 +28,10 @@ namespace DriveRPC.Shared.Services
                 gps,
                 rpc,
                 presetService,
-                new NominatimReverseGeocoder(httpHandler));
+                new NominatimReverseGeocoder(httpHandler),
+                background);
         }
-        
+
         private readonly ILocationService _gps;
         private readonly IRpcController _rpc;
         private readonly ActivePresetService _presetService;
@@ -45,22 +49,24 @@ namespace DriveRPC.Shared.Services
         private CancellationTokenSource _cts;
 
         private DateTimeOffset _lastGpsConsume;
-        
+
         private PresenceUpdateService(
             ILocationService gps,
             IRpcController rpc,
             ActivePresetService presetService,
-            NominatimReverseGeocoder reverseGeocoder)
+            NominatimReverseGeocoder reverseGeocoder,
+            IBackgroundExecutionManager background)
         {
             _gps = gps;
             _rpc = rpc;
             _presetService = presetService;
             _reverseGeocoder = reverseGeocoder;
+            _background = background;
 
             _gps.LocationUpdated += (s, e) => _locationDirty = true;
             _gps.ReplayTimeChanged += (s, t) => _locationDirty = true;
         }
-        
+
         public void Start()
         {
             if (_running)
@@ -86,6 +92,8 @@ namespace DriveRPC.Shared.Services
         {
             while (!token.IsCancellationRequested)
             {
+                await _background.RequestKeepAliveAsync();
+
                 await Task.Delay(250, token);
 
                 var now = DateTimeOffset.UtcNow;
