@@ -9,12 +9,23 @@ using Windows.System;
 
 namespace DriveRPC.Shared.UWP.Helpers
 {
-    public static class BackgroundKeeper
+    public class UwpBackgroundExecutionManager : IBackgroundExecutionManager
     {
-        private static ExtendedExecutionSession _session;
+        private ExtendedExecutionSession _session;
+        private bool _revoked;
 
-        public static async Task<bool> RequestKeepAliveAsync()
+        public async Task<bool> RequestKeepAliveAsync()
         {
+            if (_session != null && !_revoked)
+                return true;
+
+            if (_revoked)
+            {
+                _session?.Dispose();
+                _session = null;
+                _revoked = false;
+            }
+
             var accessStatus = await BackgroundExecutionManager.RequestAccessAsync();
 
 #if UWP1709
@@ -37,13 +48,10 @@ namespace DriveRPC.Shared.UWP.Helpers
             return false;
         }
 
-        private static async Task<bool> StartExtendedSessionAsync()
+        private async Task<bool> StartExtendedSessionAsync()
         {
-            if (!ApiInformation.IsTypePresent(
-                    "Windows.ApplicationModel.ExtendedExecution.ExtendedExecutionSession"))
-                return false;
-
-            StopKeepAlive();
+            if (_session != null)
+                return true;
 
             try
             {
@@ -59,12 +67,11 @@ namespace DriveRPC.Shared.UWP.Helpers
 
                 if (result == ExtendedExecutionResult.Allowed)
                 {
-                    System.Diagnostics.Debug.WriteLine(
-                        "[Background] Extended Execution Allowed. DriveRPC will continue while minimized.");
+                    System.Diagnostics.Debug.WriteLine("[Background] Extended Execution Allowed.");
                     return true;
                 }
 
-                System.Diagnostics.Debug.WriteLine("[Background] Extended Execution Denied by OS.");
+                System.Diagnostics.Debug.WriteLine("[Background] Extended Execution Denied.");
                 _session.Dispose();
                 _session = null;
                 return false;
@@ -76,7 +83,7 @@ namespace DriveRPC.Shared.UWP.Helpers
             }
         }
 
-        public static void StopKeepAlive()
+        public void StopKeepAlive()
         {
             if (_session != null)
             {
@@ -87,25 +94,10 @@ namespace DriveRPC.Shared.UWP.Helpers
             }
         }
 
-        private static void Session_Revoked(object sender, ExtendedExecutionRevokedEventArgs args)
+        private void Session_Revoked(object sender, ExtendedExecutionRevokedEventArgs args)
         {
             System.Diagnostics.Debug.WriteLine($"[Background] Session Revoked! Reason: {args.Reason}");
-            StopKeepAlive();
-        }
-
-        public static async Task OpenBackgroundSettingsAsync()
-        {
-            if (OSHelper.IsWindows11)
-            {
-                string pfn = Windows.ApplicationModel.Package.Current.Id.FamilyName;
-                var uri = new Uri($"ms-settings:appsfeatures-app?{pfn}");
-                _ = Windows.System.Launcher.LaunchUriAsync(uri);
-            }
-            else
-            {
-                var uri = new Uri("ms-settings:privacy-backgroundapps");
-                _ = Windows.System.Launcher.LaunchUriAsync(uri);
-            }
+            _revoked = true;
         }
     }
 }

@@ -19,11 +19,14 @@
       <DependentUpon>StatusCard.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Converters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\EnumToIntConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\StringToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\NullToVisibilityConverter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\BackgroundKeeper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\UwpSettingsNavigator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\UwpBackgroundExecutionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\NavigationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Enums.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\WindowsWebHttpHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\LocationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\NavigationFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileSystem.cs" />
