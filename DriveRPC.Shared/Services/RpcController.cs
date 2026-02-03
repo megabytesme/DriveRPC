@@ -81,15 +81,13 @@ namespace DriveRPC.Shared.Services
                     return;
                 }
 
-                _socket = _socketFactory();
-
                 var options = new DiscordConnectionOptions
                 {
                     Token = token,
                     ApplicationId = AppId
                 };
 
-                _gateway = new DiscordGatewayClient(options, _socket, true);
+                _gateway = new DiscordGatewayClient(options, _socketFactory, true);
 
                 _gateway.ConnectionStateChanged += OnConnectionStateChanged;
                 _gateway.StateChanged += OnGatewayStateChanged;
