@@ -41,6 +41,8 @@ namespace DriveRPC.Shared.UWP.Views
 #else
             AppearanceStackPanel.Visibility = Visibility.Collapsed;
 #endif
+
+            _loading = false;
         }
     }
 }
