@@ -152,7 +152,7 @@ namespace DriveRPC.Shared.UWP.Services
             }
 
 #if UWP1507
-            _accelerometer = Accelerometer.GetDefault();
+    _accelerometer = Accelerometer.GetDefault();
 #else
             _accelerometer = Accelerometer.GetDefault(AccelerometerReadingType.Linear);
 #endif
@@ -184,6 +184,8 @@ namespace DriveRPC.Shared.UWP.Services
                     );
 
                     _filter.Initialize(initialPosition, null);
+
+                    LocationUpdated?.Invoke(this, EventArgs.Empty);
                 }
             }
             catch { }
@@ -254,12 +256,14 @@ namespace DriveRPC.Shared.UWP.Services
             LocationUpdated?.Invoke(this, EventArgs.Empty);
         }
 
+        private bool _hasReportedFirstFix = false;
+
         private void OnPositionChanged(Geolocator sender, PositionChangedEventArgs args)
         {
             if (_isReplaying)
                 return;
 
-            CurrentStatus = DriveRPC.Shared.Models.PositionStatus.Ready;
+            CurrentStatus = Shared.Models.PositionStatus.Ready;
             SpeedMetersPerSecond = args.Position.Coordinate.Speed;
 
             var newPosition = new Vector2(
@@ -269,9 +273,18 @@ namespace DriveRPC.Shared.UWP.Services
 
             double? gpsHeading = args.Position.Coordinate.Heading;
 
+            bool wasInitialized = _filter.IsInitialized;
+
             _filter.Update(newPosition, SpeedMetersPerSecond, gpsHeading);
 
             _recorder.RecordGps(newPosition.X, newPosition.Y, SpeedMetersPerSecond, gpsHeading);
+
+            if (!_hasReportedFirstFix || !wasInitialized)
+            {
+                _hasReportedFirstFix = true;
+                LocationUpdated?.Invoke(this, EventArgs.Empty);
+                return;
+            }
 
             LocationUpdated?.Invoke(this, EventArgs.Empty);
         }
