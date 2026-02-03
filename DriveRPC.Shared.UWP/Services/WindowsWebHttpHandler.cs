@@ -35,9 +35,6 @@ namespace DriveRPC.Shared.UWP.Services
             await _httpLock.WaitAsync();
             try
             {
-                Debug($"[GET] URL = {url}");
-                Debug($"[GET] Token = {(string.IsNullOrEmpty(userToken) ? "<none>" : userToken)}");
-
                 using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8)))
                 {
                     var uri = new Uri(url);
@@ -103,10 +100,6 @@ namespace DriveRPC.Shared.UWP.Services
 
         private async Task<DiscordHttpResponse> InternalPostJsonAsync(string url, string json, string userToken)
         {
-            Debug($"[POST] URL = {url}");
-            Debug($"[POST] JSON = {json}");
-            Debug($"[POST] Token = {(string.IsNullOrEmpty(userToken) ? "<none>" : userToken)}");
-
             try
             {
                 var uri = new Uri(url);
@@ -125,19 +118,9 @@ namespace DriveRPC.Shared.UWP.Services
                     request.Headers.Add("Authorization", userToken);
                 }
 
-                Debug("[POST] Request Headers:");
-                foreach (var h in request.Headers)
-                    Debug($"   {h.Key}: {string.Join(", ", h.Value)}");
-
-                Debug("[POST] Sending request...");
-
                 using (var response = await _client.SendRequestAsync(request))
                 {
-                    Debug($"[POST] Response Status = {(int)response.StatusCode} ({response.StatusCode})");
-
                     var body = await response.Content.ReadAsStringAsync();
-
-                    Debug($"[POST] Response Body = {body}");
 
                     return new DiscordHttpResponse
                     {
@@ -155,7 +138,6 @@ namespace DriveRPC.Shared.UWP.Services
 
         public void Dispose()
         {
-            Debug("[DISPOSE] WindowsWebHttpHandler disposed");
             _client?.Dispose();
         }
 
