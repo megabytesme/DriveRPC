@@ -68,9 +68,6 @@ public class NominatimReverseGeocoder
 
             var response = await _http.GetAsync(url);
 
-            System.Diagnostics.Debug.WriteLine("[GEOCODER] Status: " + response.IsSuccessStatusCode);
-            System.Diagnostics.Debug.WriteLine("[GEOCODER] Body: " + response.Body?.Substring(0, Math.Min(400, response.Body.Length)));
-
             if (!response.IsSuccessStatusCode || string.IsNullOrWhiteSpace(response.Body))
                 return null;
 
