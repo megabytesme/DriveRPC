@@ -11,11 +11,6 @@ using Windows.UI.Xaml.Media.Animation;
 
 namespace DriveRPC.Shared.UWP.Services
 {
-    public enum TrackingMode
-    {
-        Standard,
-        Navigation,
-    }
 
     public class LocationService : ILocationService
     {
@@ -130,7 +125,8 @@ namespace DriveRPC.Shared.UWP.Services
             _isListening = true;
 
             _locator = new Geolocator();
-            SetTrackingMode(TrackingMode.Standard);
+            _locator.DesiredAccuracy = PositionAccuracy.High;
+            _locator.ReportInterval = 3000;
             _locator.PositionChanged += OnPositionChanged;
             _locator.StatusChanged += OnStatusChanged;
             CurrentStatus = ConvertStatus(_locator.LocationStatus);
@@ -316,23 +312,6 @@ namespace DriveRPC.Shared.UWP.Services
                     return 270;
                 default:
                     return 0;
-            }
-        }
-
-        public void SetTrackingMode(TrackingMode mode)
-        {
-            if (_locator == null)
-                return;
-            if (mode == TrackingMode.Navigation)
-            {
-                _locator.DesiredAccuracy = PositionAccuracy.High;
-                _locator.MovementThreshold = 1;
-            }
-            else
-            {
-                _locator.DesiredAccuracy = PositionAccuracy.Default;
-                _locator.MovementThreshold = 2.0;
-                _locator.ReportInterval = 1000;
             }
         }
 
