@@ -52,8 +52,32 @@ namespace DriveRPC.Shared.Services
             if (!await _fs.FileExistsAsync(path))
                 return null;
 
-            var text = await _fs.ReadTextAsync(path);
-            var json = JObject.Parse(text);
+            string text;
+            try
+            {
+                text = await _fs.ReadTextAsync(path);
+            }
+            catch
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                await _fs.DeleteFileAsync(path);
+                return null;
+            }
+
+            JObject json;
+            try
+            {
+                json = JObject.Parse(text);
+            }
+            catch
+            {
+                await _fs.DeleteFileAsync(path);
+                return null;
+            }
 
             long expires = json["expires"]?.ToObject<long>() ?? 0;
             long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
