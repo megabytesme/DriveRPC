@@ -1,6 +1,4 @@
-﻿using DriveRPC.Shared.UWP.Services;
-using DriveRPC.Shared.ViewModels;
-using UWP_1507;
+﻿using UWP_1507;
 
 namespace DriveRPC.Shared.UWP.Views
 {
@@ -10,16 +8,11 @@ namespace DriveRPC.Shared.UWP.Views
         {
             InitializeComponent();
 
-            var viewModel = new StatusViewModel(
-                App.RpcController,
-                new UiThread(),
-                App.PresetService,
-                null,
-                App.GpsService,
-                App.ReverseGeocoder
+            InitializeSharedLogic(
+                StatusTextBlock,
+                StatusCardControl,
+                App.StatusViewModel
             );
-
-            InitializeSharedLogic(StatusTextBlock, StatusCardControl, viewModel);
         }
     }
 }

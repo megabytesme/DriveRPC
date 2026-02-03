@@ -46,10 +46,7 @@
             Margin="20,100,20,100"
             HorizontalAlignment="Center"
             VerticalAlignment="Center">
-            <controls:StatusCard
-                x:Name="StatusCardControl"
-                Background="Transparent"
-                Visibility="{x:Bind CardViewModel.ActivityName, Mode=OneWay, Converter={StaticResource StringToVis}}" />
+            <controls:StatusCard x:Name="StatusCardControl" Visibility="{x:Bind ViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
         </Grid>
 
         <Border Grid.Row="2" Padding="16,8">

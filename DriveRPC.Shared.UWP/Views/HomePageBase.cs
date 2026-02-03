@@ -1,5 +1,7 @@
 ﻿using DriveRPC.Shared.ViewModels;
+using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -27,13 +29,11 @@ namespace DriveRPC.Shared.UWP.Views
             CardViewModel = new StatusCardViewModel();
             _statusCardControl.DataContext = CardViewModel;
 
-            SyncAllProperties();
-
             ViewModel.PropertyChanged += OnViewModelPropertyChanged;
 
+            SyncAllProperties();
             UpdateStatusText();
         }
-
         private void SyncAllProperties()
         {
             CardViewModel.ActivityName = ViewModel.ActivityName;
@@ -85,13 +85,13 @@ namespace DriveRPC.Shared.UWP.Views
 
         protected async void StartRpc_Click(object sender, RoutedEventArgs e)
         {
-            await ViewModel.StartAsync();
-            UpdateStatusText();
+            _ = ViewModel.StartAsync();
         }
 
         protected async void StopRpc_Click(object sender, RoutedEventArgs e)
         {
-            await ViewModel.StopAsync();
+            await Task.Run(() => ViewModel.StopAsync());
+            SyncAllProperties();
             UpdateStatusText();
         }
 

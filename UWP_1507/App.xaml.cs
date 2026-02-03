@@ -2,6 +2,7 @@
 using DriveRPC.Shared.UWP.Helpers;
 using DriveRPC.Shared.UWP.Services;
 using DriveRPC.Shared.UWP.Views;
+using DriveRPC.Shared.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -43,6 +44,7 @@ namespace UWP_1507
         public static PresenceUpdateService Presence => PresenceUpdateService.Instance;
         public static IBackgroundExecutionManager BackgroundManager { get; private set; }
         public static ISettingsNavigator SettingsNavigator { get; set; } = new UwpSettingsNavigator();
+        public static StatusViewModel StatusViewModel { get; private set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -112,6 +114,14 @@ namespace UWP_1507
                 () => new ClientWebSocketAdapter(),
                 () => discordHttp
             );
+            StatusViewModel = new StatusViewModel(
+                RpcController,
+                new UiThread(),
+                PresetService,
+                null,
+                GpsService,
+                ReverseGeocoder
+            );
 
             PresenceUpdateService.Initialize(
                 GpsService,
@@ -120,8 +130,6 @@ namespace UWP_1507
                 nominatimHttp,
                 BackgroundManager
             );
-
-            PresenceUpdateService.Instance.Start();
 
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -254,10 +262,18 @@ namespace UWP_1507
         /// </summary>
         /// <param name="sender">The source of the suspend request.</param>
         /// <param name="e">Details about the suspend request.</param>
-        private void OnSuspending(object sender, SuspendingEventArgs e)
+        private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
-            //TODO: Save application state and stop any background activity
+
+            PreviewGpsService.StopListening();
+            GpsService.StopListening();
+
+            PresenceUpdateService.Instance?.Stop();
+
+            if (RpcController.IsRunning)
+                await RpcController.StopAsync();
+
             deferral.Complete();
         }
     }

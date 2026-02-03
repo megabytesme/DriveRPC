@@ -14,6 +14,12 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Navigation;
+#if UWP1507
+using UWP_1507;
+#else
+using UWP;
+#endif
 
 namespace DriveRPC.Shared.UWP.Views
 {
@@ -142,11 +148,8 @@ namespace DriveRPC.Shared.UWP.Views
 
             await ViewModel.InitializeAsync();
 
-#if UWP1507
-            await UWP_1507.App.PreviewGpsService.StartListeningAsync();
-#else
             await App.PreviewGpsService.StartListeningAsync();
-#endif
+
             ViewModel.SelectedGpsSource = ViewModel.SelectedGpsSource;
 
             var settings = ApplicationData.Current.LocalSettings;
@@ -246,6 +249,8 @@ namespace DriveRPC.Shared.UWP.Views
             var ok = await PromptToSaveIfNeededAsync();
             if (!ok)
                 e.Cancel = true;
+
+            App.PreviewGpsService.StopListening();
         }
 
         private void StatusViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
