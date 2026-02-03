@@ -13,8 +13,10 @@ namespace DriveRPC.Shared.ViewModels
 {
     public class AppearancePageViewModel : INotifyPropertyChanged
     {
+        private const string AppId = "1466639317328990291";
+
         private readonly ILocationService _gps;
-        private readonly IRpcController _rpc;
+        private readonly RpcController _rpc;
         private readonly IAppearancePresetStore _store;
         private readonly ActivePresetService _presetService;
         private readonly NominatimReverseGeocoder _reverseGeocoder;
@@ -113,7 +115,7 @@ namespace DriveRPC.Shared.ViewModels
 
         public AppearancePageViewModel(
             ILocationService gps,
-            IRpcController rpc,
+            RpcController rpc,
             IAppearancePresetStore store,
             ActivePresetService presetService,
             NominatimReverseGeocoder geocoder)
@@ -124,13 +126,23 @@ namespace DriveRPC.Shared.ViewModels
             _presetService = presetService;
             _reverseGeocoder = geocoder;
 
-            _gps.LocationUpdated += (s, e) => LatestGps = BuildSnapshot();
+            _gps.LocationUpdated += (s, e) =>
+            {
+                LatestGps = BuildSnapshot();
+                UpdatePreview();
+            };
+
+            _gps.HeadingUpdated += (s, e) =>
+            {
+                UpdatePreview();
+            };
 
             _gps.ReplayTimeChanged += (s, t) =>
             {
                 ReplayPosition = t;
                 OnPropertyChanged(nameof(ReplayDuration));
                 OnPropertyChanged(nameof(ReplayTimeText));
+                UpdatePreview();
             };
         }
 
@@ -302,9 +314,11 @@ namespace DriveRPC.Shared.ViewModels
             var formatter = new StatusFormatter(EditingPreset, _lastLocation);
             var config = formatter.BuildRpcConfig(gps, _rpc.ActivityStartTimestamp, _countryFlagAssetKey);
 
-            PreviewActivityName = formatter.BuildActivityName();
-            PreviewDetails = formatter.BuildDetails(LatestGps);
+            PreviewActivityName = config.Name;
+            PreviewDetails = config.Details;
         }
+
+        public string CountryFlagAssetKey => _countryFlagAssetKey;
 
         private async Task EnsureCountryFlagCachedAsync()
         {
@@ -318,6 +332,30 @@ namespace DriveRPC.Shared.ViewModels
             var url = $"https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Flags/{code.ToLower()}.png";
 
             _countryFlagAssetKey = await _rpc.CacheImageAsync(url);
+        }
+
+        public string BuildImageUrl(string assetKey)
+        {
+            if (string.IsNullOrWhiteSpace(assetKey))
+                return null;
+
+            if (assetKey.StartsWith("mp:external/", StringComparison.OrdinalIgnoreCase))
+            {
+                var parts = assetKey.Split(new[] { "/https/" }, StringSplitOptions.None);
+                if (parts.Length == 2)
+                {
+                    var encodedUrl = parts[1];
+
+                    var decodedOnce = Uri.UnescapeDataString(encodedUrl);
+                    var decodedTwice = Uri.UnescapeDataString(decodedOnce);
+
+                    return "https://" + decodedTwice;
+                }
+
+                return $"https://cdn.discordapp.com/app-assets/{AppId}/{assetKey}";
+            }
+
+            return $"https://cdn.discordapp.com/app-assets/{AppId}/{assetKey}.png";
         }
 
         private string _previewActivityName;

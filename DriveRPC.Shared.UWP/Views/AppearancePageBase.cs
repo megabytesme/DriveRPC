@@ -142,6 +142,13 @@ namespace DriveRPC.Shared.UWP.Views
 
             await ViewModel.InitializeAsync();
 
+#if UWP1507
+            await UWP_1507.App.PreviewGpsService.StartListeningAsync();
+#else
+            await App.PreviewGpsService.StartListeningAsync();
+#endif
+            ViewModel.SelectedGpsSource = ViewModel.SelectedGpsSource;
+
             var settings = ApplicationData.Current.LocalSettings;
             if (settings.Values.TryGetValue("Appearance_LastPresetIndex", out object value)
                 && value is int idx
@@ -162,10 +169,9 @@ namespace DriveRPC.Shared.UWP.Views
             UpdateGpsUiVisibility();
             UpdatePreviewCard();
             UpdateStatusText();
-
-            ViewModel.SelectedGpsSource = ViewModel.SelectedGpsSource;
-
             ApplyResponsiveLayout();
+
+            await ApplyGpsSourceToRealServiceAsync();
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -424,21 +430,33 @@ namespace DriveRPC.Shared.UWP.Views
                 cardVm.ElapsedTimeText = "Preview";
 
                 if (preset != null && preset.ShowParty && preset.SeatCount > 0)
-                {
                     cardVm.PartyText = $"{preset.SeatsUsed} of {preset.SeatCount}";
+                else
+                    cardVm.PartyText = null;
+
+                if (!string.IsNullOrWhiteSpace(preset?.CachedLargeImageKey))
+                    cardVm.LargeImageUrl = ViewModel.BuildImageUrl(preset.CachedLargeImageKey);
+                else if (!string.IsNullOrWhiteSpace(preset?.CarImageUrl))
+                    cardVm.LargeImageUrl = preset.CarImageUrl;
+                else
+                    cardVm.LargeImageUrl = null;
+
+                if (!string.IsNullOrWhiteSpace(ViewModel.CountryFlagAssetKey))
+                {
+                    cardVm.SmallImageUrl = ViewModel.BuildImageUrl(ViewModel.CountryFlagAssetKey);
+                }
+                else if (!string.IsNullOrWhiteSpace(preset?.CachedSmallImageKey))
+                {
+                    cardVm.SmallImageUrl = ViewModel.BuildImageUrl(preset.CachedSmallImageKey);
+                }
+                else if (!string.IsNullOrWhiteSpace(preset?.SmallImageUrl))
+                {
+                    cardVm.SmallImageUrl = preset.SmallImageUrl;
                 }
                 else
                 {
-                    cardVm.PartyText = null;
+                    cardVm.SmallImageUrl = null;
                 }
-
-                cardVm.LargeImageUrl = string.IsNullOrWhiteSpace(preset?.CarImageUrl)
-                    ? null
-                    : preset.CarImageUrl;
-
-                cardVm.SmallImageUrl = string.IsNullOrWhiteSpace(preset?.SmallImageUrl)
-                    ? null
-                    : preset.SmallImageUrl;
             });
         }
 
