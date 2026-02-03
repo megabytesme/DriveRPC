@@ -106,7 +106,28 @@ namespace DriveRPC.Shared.UWP.Services
             }
         }
 
-        public async Task<RpcWebSocketReceiveResult> ReceiveAsync(
+        public async Task<string> ReceiveAsync(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                if (_queue.TryDequeue(out var message))
+                    return message;
+
+                if (_state == RpcWebSocketState.Closed)
+                    return null;
+
+                try
+                {
+                    await _signal.WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    return null;
+                }
+            }
+        }
+
+        private async Task<RpcWebSocketReceiveResult> ReceiveAsync(
             ArraySegment<byte> buffer,
             CancellationToken cancellationToken)
         {
