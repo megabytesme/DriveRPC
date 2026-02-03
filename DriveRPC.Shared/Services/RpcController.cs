@@ -1,6 +1,7 @@
 ﻿using DriveRPC.Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using UserPresenceRPC.Discord.Net.Exceptions;
@@ -11,49 +12,34 @@ using UserPresenceRPC.Discord.Net.Services;
 
 namespace DriveRPC.Shared.Services
 {
-    public interface IRpcController
-    {
-        bool IsRunning { get; }
-        string StatusText { get; }
-
-        Presence CurrentPresence { get; }
-        long ActivityStartTimestamp { get; }
-
-        event Action PresenceUpdated;
-
-        Task StartAsync();
-        Task StopAsync();
-
-        Task UpdatePresenceAsync(RpcConfig config);
-
-        Task<string> CacheImageAsync(string url);
-    }
-
-    public class RpcController : IRpcController
+    public class RpcController
     {
         private readonly ISecureStorage _secureStorage;
         private readonly IFileCacheService _fileCache;
+        private readonly Func<IWebSocketClient> _socketFactory;
+        private readonly IHttpHandler _restHandler;
 
         private DiscordGatewayClient _gateway;
         private DiscordRestClient _rest;
         private IWebSocketClient _socket;
-        private IHttpHandler _restHandler;
-        private readonly Func<IWebSocketClient> _socketFactory;
 
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
+        private readonly Dictionary<string, string> _memoryCache = new Dictionary<string, string>();
 
-        private readonly Dictionary<string, string> _memoryCache =
-            new Dictionary<string, string>();
+        private long? _activityStartTimestamp;
 
-        public bool IsRunning { get; private set; }
-        public string StatusText { get; private set; } = "Idle";
+        public RpcConnectionState ConnectionState { get; private set; } = RpcConnectionState.Stopped;
+        public GatewayState GatewayState { get; private set; } = GatewayState.Disconnected;
+        public int LastReconnectAttempt { get; private set; }
+        public bool IsRunning => ConnectionState == RpcConnectionState.Running;
+
+        public string StatusText { get; private set; } = "DriveRPC is not running";
+
         public Presence CurrentPresence { get; private set; }
 
         public event Action PresenceUpdated;
 
         private const string AppId = "1466639317328990291";
-
-        private long? _activityStartTimestamp;
 
         public long ActivityStartTimestamp
         {
@@ -84,15 +70,13 @@ namespace DriveRPC.Shared.Services
             await _connectionLock.WaitAsync();
             try
             {
-                if (IsRunning && _gateway != null && _socket != null &&
-                    _socket.State == RpcWebSocketState.Open)
+                if (IsRunning)
                     return;
 
                 var token = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
                 if (string.IsNullOrWhiteSpace(token))
                 {
-                    StatusText = "No token configured.";
-                    IsRunning = false;
+                    StatusText = "No Discord token configured.";
                     PresenceUpdated?.Invoke();
                     return;
                 }
@@ -105,7 +89,11 @@ namespace DriveRPC.Shared.Services
                     ApplicationId = AppId
                 };
 
-                _gateway = new DiscordGatewayClient(options, _socket);
+                _gateway = new DiscordGatewayClient(options, _socket, true);
+
+                _gateway.ConnectionStateChanged += OnConnectionStateChanged;
+                _gateway.StateChanged += OnGatewayStateChanged;
+                _gateway.ReconnectAttempt += OnReconnectAttempt;
 
                 try
                 {
@@ -113,12 +101,152 @@ namespace DriveRPC.Shared.Services
                 }
                 catch (DiscordGatewayException gw)
                 {
-                    StatusText = "Gateway error: " + gw.Message;
-                    IsRunning = false;
+                    StatusText = "Failed to connect to Discord: " + gw.Message;
                     PresenceUpdated?.Invoke();
                     return;
                 }
+            }
+            finally
+            {
+                _connectionLock.Release();
+            }
+        }
 
+        public async Task StopAsync()
+        {
+            await _connectionLock.WaitAsync();
+            try
+            {
+                if (_gateway != null)
+                {
+                    _gateway.AutoReconnect = false;
+                    try { await _gateway.DisconnectAsync(); }
+                    catch { }
+                }
+
+                PresenceUpdateService.Instance?.Stop();
+
+                _gateway = null;
+                _socket?.Dispose();
+                _socket = null;
+
+                CurrentPresence = null;
+                StatusText = "DriveRPC is not running";
+            }
+            finally
+            {
+                _connectionLock.Release();
+            }
+        }
+
+        public async Task UpdatePresenceAsync(RpcConfig config)
+        {
+            if (!IsRunning || _gateway == null)
+                return;
+
+            bool success = true;
+
+            await _connectionLock.WaitAsync();
+            try
+            {
+                CurrentPresence = RpcHelper.BuildPresence(config, AppId);
+
+                try
+                {
+                    await _gateway.UpdatePresenceAsync(config);
+                }
+                catch (DiscordGatewayException gw)
+                {
+                    StatusText = "Failed to update presence: " + gw.Message;
+                    success = false;
+                }
+            }
+            finally
+            {
+                _connectionLock.Release();
+            }
+
+            PresenceUpdated?.Invoke();
+        }
+
+        public async Task<string> CacheImageAsync(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return null;
+
+            if (_memoryCache.TryGetValue(url, out var mem))
+                return mem;
+
+            var disk = await _fileCache.LoadAsync(url);
+            if (!string.IsNullOrWhiteSpace(disk))
+            {
+                _memoryCache[url] = disk;
+                return disk;
+            }
+
+            var token = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
+            if (string.IsNullOrWhiteSpace(token))
+                return null;
+
+            try
+            {
+                var proxied = await _rest.ResolveExternalImageAsync(url, AppId, token);
+
+                _memoryCache[url] = proxied;
+                await _fileCache.SaveAsync(url, proxied);
+
+                return proxied;
+            }
+            catch (DiscordRateLimitException rl)
+            {
+                StatusText = $"Rate limited: retry after {rl.RetryAfter:0.0}s";
+                PresenceUpdated?.Invoke();
+                return null;
+            }
+            catch (DiscordRestException restEx)
+            {
+                StatusText = "REST error: " + restEx.Message;
+                PresenceUpdated?.Invoke();
+                return null;
+            }
+        }
+
+        private void OnConnectionStateChanged(RpcConnectionState state)
+        {
+            ConnectionState = state;
+            UpdateStatusText();
+
+            if (state == RpcConnectionState.Stopped || state == RpcConnectionState.Error)
+                PresenceUpdateService.Instance?.Stop();
+
+            PresenceUpdated?.Invoke();
+        }
+
+        private void OnGatewayStateChanged(GatewayState state)
+        {
+            GatewayState = state;
+            UpdateStatusText();
+
+            if (state == GatewayState.Ready && ConnectionState == RpcConnectionState.Running)
+            {
+                PresenceUpdateService.Instance?.Start();
+                SendInitialPresence();
+            }
+
+            PresenceUpdated?.Invoke();
+        }
+
+        private void OnReconnectAttempt(int attempt)
+        {
+            LastReconnectAttempt = attempt;
+            UpdateStatusText();
+            PresenceUpdated?.Invoke();
+        }
+
+        private async void SendInitialPresence()
+        {
+            try
+            {
                 string largeUrl;
                 string smallUrl;
 
@@ -178,7 +306,7 @@ namespace DriveRPC.Shared.Services
                 {
                     Name = "Driving",
                     Details = "Sharing my drive on Discord",
-                    State = "Using DriveRPC for " + OSHelper.GetOsDescriptor,
+                    State = "DriveRPC for " + OSHelper.GetOsDescriptor,
                     Status = "online",
                     Type = "0",
                     Platform = "desktop",
@@ -189,142 +317,57 @@ namespace DriveRPC.Shared.Services
                 };
 
                 CurrentPresence = RpcHelper.BuildPresence(config, AppId);
-
-                try
-                {
-                    await _gateway.UpdatePresenceAsync(config);
-                }
-                catch (DiscordGatewayException gw)
-                {
-                    StatusText = "Gateway error while sending presence: " + gw.Message;
-                    IsRunning = false;
-                    PresenceUpdated?.Invoke();
-                    return;
-                }
-
-                IsRunning = true;
-                StatusText = "RPC running.";
                 PresenceUpdated?.Invoke();
+                await _gateway.UpdatePresenceAsync(config);
             }
-            finally
-            {
-                _connectionLock.Release();
-            }
+            catch { }
         }
 
-        public async Task StopAsync()
+        private void UpdateStatusText()
         {
-            await _connectionLock.WaitAsync();
-            try
+            if (ConnectionState == RpcConnectionState.Error)
             {
-                if (!IsRunning && _gateway == null && _socket == null)
-                    return;
-
-                try
-                {
-                    if (_socket?.State == RpcWebSocketState.Open)
-                    {
-                        await _socket.CloseAsync(
-                            RpcWebSocketCloseStatus.NormalClosure,
-                            "User stopped RPC",
-                            CancellationToken.None
-                        );
-                    }
-                }
-                catch { }
-
-                _gateway = null;
-
-                _socket?.Dispose();
-                _socket = null;
-
-                IsRunning = false;
-                StatusText = "RPC stopped.";
-                CurrentPresence = null;
-
-                PresenceUpdated?.Invoke();
-                _restHandler?.Dispose();
-                _rest = null;
-            }
-            finally
-            {
-                _connectionLock.Release();
-            }
-        }
-
-        public async Task UpdatePresenceAsync(RpcConfig config)
-        {
-            await _connectionLock.WaitAsync();
-            try
-            {
-                if (!IsRunning || _gateway == null || _socket == null ||
-                    _socket.State != RpcWebSocketState.Open)
-                    return;
-
-                if (_activityStartTimestamp == null)
-                    _activityStartTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-                CurrentPresence = RpcHelper.BuildPresence(config, AppId);
-
-                try
-                {
-                    await _gateway.UpdatePresenceAsync(config);
-                }
-                catch (DiscordGatewayException gw)
-                {
-                    IsRunning = false;
-                    StatusText = "Gateway error while updating presence: " + gw.Message;
-                    PresenceUpdated?.Invoke();
-                    return;
-                }
-
-                PresenceUpdated?.Invoke();
-            }
-            finally
-            {
-                _connectionLock.Release();
-            }
-        }
-
-        public async Task<string> CacheImageAsync(string url)
-        {
-            if (string.IsNullOrWhiteSpace(url))
-                return null;
-
-            if (_memoryCache.TryGetValue(url, out var mem))
-                return mem;
-
-            var disk = await _fileCache.LoadAsync(url);
-            if (!string.IsNullOrWhiteSpace(disk))
-            {
-                _memoryCache[url] = disk;
-                return disk;
+                StatusText = "DriveRPC failed to start or stop";
+                return;
             }
 
-            var token = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
-            if (string.IsNullOrWhiteSpace(token))
-                return null;
-
-            try
+            if (ConnectionState == RpcConnectionState.Stopped)
             {
-                var proxied = await _rest.ResolveExternalImageAsync(url, AppId, token);
-
-                _memoryCache[url] = proxied;
-                await _fileCache.SaveAsync(url, proxied);
-
-                return proxied;
+                StatusText = "DriveRPC is not running";
+                return;
             }
-            catch (DiscordRateLimitException rl)
+
+            switch (GatewayState)
             {
-                StatusText = $"Rate limited: retry after {rl.RetryAfter:0.0}s";
-                PresenceUpdated?.Invoke();
-                return null;
-            }
-            catch (DiscordRestException restEx)
-            {
-                StatusText = "REST error: " + restEx.Message;
-                PresenceUpdated?.Invoke();
-                return null;
+                case GatewayState.Connecting:
+                    StatusText = "Connecting to Discord…";
+                    break;
+                case GatewayState.Connected:
+                    StatusText = "Connected — waiting for HELLO…";
+                    break;
+                case GatewayState.HelloReceived:
+                    StatusText = "Handshake received — identifying…";
+                    break;
+                case GatewayState.Identifying:
+                    StatusText = "Authenticating with Discord…";
+                    break;
+                case GatewayState.Ready:
+                    StatusText = "Connected to Discord";
+                    break;
+                case GatewayState.Running:
+                    StatusText = "DriveRPC is active";
+                    break;
+                case GatewayState.Reconnecting:
+                    StatusText = LastReconnectAttempt > 0
+                        ? "Connection lost — attempting to reconnect (Attempt " + LastReconnectAttempt + ")"
+                        : "Reconnecting…";
+                    break;
+                case GatewayState.Error:
+                    StatusText = "A connection error occurred — retrying…";
+                    break;
+                default:
+                    StatusText = "DriveRPC is running";
+                    break;
             }
         }
     }

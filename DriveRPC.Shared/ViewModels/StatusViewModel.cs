@@ -12,7 +12,9 @@ namespace DriveRPC.Shared.ViewModels
 {
     public class StatusViewModel : INotifyPropertyChanged
     {
-        private readonly IRpcController _rpc;
+        private const string AppId = "1466639317328990291";
+
+        private readonly RpcController _rpc;
         private readonly IUiThread _ui;
         private readonly ActivePresetService _presetService;
         private readonly AppearancePageViewModel _appearanceVm;
@@ -22,12 +24,10 @@ namespace DriveRPC.Shared.ViewModels
         private LocationInfo _lastLocation;
         private string _countryFlagAssetKey;
 
-        private const string AppId = "1466639317328990291";
-
         public bool IsLiveUpdatingEnabled { get; set; } = false;
 
         public StatusViewModel(
-            IRpcController rpcController,
+            RpcController rpcController,
             IUiThread uiThread,
             ActivePresetService presetService,
             AppearancePageViewModel appearanceVm,
@@ -41,43 +41,12 @@ namespace DriveRPC.Shared.ViewModels
             _realGps = realGps;
             _reverseGeocoder = geocoder;
 
-            _rpc.PresenceUpdated += OnPresenceUpdated;
+            _rpc.PresenceUpdated += () => _ui.Run(OnPresenceUpdated);
 
-            _realGps.LocationUpdated += OnRealGpsUpdated;
+            _realGps.LocationUpdated += (s, e) => _ui.Run(OnPresenceUpdated);
 
             _ui.StartRepeatingTimer(TimeSpan.FromSeconds(1),
-                            () => OnPropertyChanged(nameof(ElapsedTimeText)));
-        }
-
-        private void OnRealGpsUpdated(object sender, EventArgs e)
-        {
-            if (!IsLiveUpdatingEnabled)
-                return;
-
-            var preset = _presetService.ActivePreset;
-            if (preset == null)
-                return;
-
-            _ = UpdateRpcAsync(preset);
-        }
-
-        private async Task UpdateRpcAsync(AppearancePreset preset)
-        {
-            var gps = new GpsSnapshot
-            {
-                Latitude = _realGps.CurrentLocation?.lat ?? 0,
-                Longitude = _realGps.CurrentLocation?.lon ?? 0,
-                SpeedMetersPerSecond = _realGps.SpeedMetersPerSecond,
-                HeadingDegrees = _realGps.HeadingDegrees
-            };
-
-            _lastLocation = await _reverseGeocoder.ReverseGeocodeAsync(gps.Latitude, gps.Longitude);
-            await EnsureCountryFlagCachedAsync();
-
-            var formatter = new StatusFormatter(preset, _lastLocation);
-            var config = formatter.BuildRpcConfig(gps, _rpc.ActivityStartTimestamp, _countryFlagAssetKey);
-
-            await UpdatePresenceAsync(config);
+                () => OnPropertyChanged(nameof(ElapsedTimeText)));
         }
 
         public RpcConfig BuildRpcConfigFromPreset(AppearancePreset preset)
@@ -93,20 +62,6 @@ namespace DriveRPC.Shared.ViewModels
             var formatter = new StatusFormatter(preset, _lastLocation);
 
             return formatter.BuildRpcConfig(gps, _rpc.ActivityStartTimestamp, _countryFlagAssetKey);
-        }
-
-        private async Task EnsureCountryFlagCachedAsync()
-        {
-            if (_lastLocation == null || string.IsNullOrEmpty(_lastLocation.CountryCode))
-                return;
-
-            if (!string.IsNullOrEmpty(_countryFlagAssetKey))
-                return;
-
-            var code = _lastLocation.CountryCode.ToUpperInvariant();
-            var url = $"https://raw.githubusercontent.com/megabytesme/DriveRPC/master/App%20Assets/Resources/Flags/{code.ToLower()}.png";
-
-            _countryFlagAssetKey = await _rpc.CacheImageAsync(url);
         }
 
         public bool IsRunning => _rpc.IsRunning;
@@ -246,39 +201,41 @@ namespace DriveRPC.Shared.ViewModels
 
         private void OnPresenceUpdated()
         {
-            _ui.Run(() =>
-            {
-                OnPropertyChanged(nameof(IsRunning));
-                OnPropertyChanged(nameof(StatusText));
+            OnPropertyChanged(nameof(IsRunning));
+            OnPropertyChanged(nameof(StatusText));
 
-                OnPropertyChanged(nameof(PresenceStatus));
-                OnPropertyChanged(nameof(PresenceAfk));
-                OnPropertyChanged(nameof(PresenceSince));
+            OnPropertyChanged(nameof(PresenceStatus));
+            OnPropertyChanged(nameof(PresenceAfk));
+            OnPropertyChanged(nameof(PresenceSince));
 
-                OnPropertyChanged(nameof(ActivityName));
-                OnPropertyChanged(nameof(ActivityState));
-                OnPropertyChanged(nameof(ActivityDetails));
-                OnPropertyChanged(nameof(ActivityType));
-                OnPropertyChanged(nameof(ActivityApplicationId));
-                OnPropertyChanged(nameof(ActivityUrl));
-                OnPropertyChanged(nameof(ActivityPlatform));
-                OnPropertyChanged(nameof(ActivityStartTimestamp));
-                OnPropertyChanged(nameof(ActivityEndTimestamp));
+            OnPropertyChanged(nameof(ActivityName));
+            OnPropertyChanged(nameof(ActivityState));
+            OnPropertyChanged(nameof(ActivityDetails));
+            OnPropertyChanged(nameof(ActivityType));
+            OnPropertyChanged(nameof(ActivityApplicationId));
+            OnPropertyChanged(nameof(ActivityUrl));
+            OnPropertyChanged(nameof(ActivityPlatform));
+            OnPropertyChanged(nameof(ActivityStartTimestamp));
+            OnPropertyChanged(nameof(ActivityEndTimestamp));
 
-                OnPropertyChanged(nameof(LargeImageUrl));
-                OnPropertyChanged(nameof(LargeText));
-                OnPropertyChanged(nameof(SmallImageUrl));
-                OnPropertyChanged(nameof(SmallText));
+            OnPropertyChanged(nameof(LargeImageUrl));
+            OnPropertyChanged(nameof(LargeText));
+            OnPropertyChanged(nameof(SmallImageUrl));
+            OnPropertyChanged(nameof(SmallText));
 
-                OnPropertyChanged(nameof(PartyId));
-                OnPropertyChanged(nameof(PartySizeCurrent));
-                OnPropertyChanged(nameof(PartySizeMax));
-                OnPropertyChanged(nameof(PartyText));
-                OnPropertyChanged(nameof(Buttons));
-                OnPropertyChanged(nameof(ButtonUrls));
+            OnPropertyChanged(nameof(PartyId));
+            OnPropertyChanged(nameof(PartySizeCurrent));
+            OnPropertyChanged(nameof(PartySizeMax));
+            OnPropertyChanged(nameof(PartyText));
+            OnPropertyChanged(nameof(Buttons));
+            OnPropertyChanged(nameof(ButtonUrls));
 
-                OnPropertyChanged(nameof(ElapsedTimeText));
-            });
+            OnPropertyChanged(nameof(ElapsedTimeText));
+        }
+
+        public void RefreshAll()
+        {
+            _ui.Run(OnPresenceUpdated);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

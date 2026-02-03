@@ -16,7 +16,7 @@ namespace DriveRPC.Shared.Services
 
         public static void Initialize(
             ILocationService gps,
-            IRpcController rpc,
+            RpcController rpc,
             ActivePresetService presetService,
             IHttpHandler httpHandler,
             IBackgroundExecutionManager background)
@@ -33,7 +33,7 @@ namespace DriveRPC.Shared.Services
         }
 
         private readonly ILocationService _gps;
-        private readonly IRpcController _rpc;
+        private readonly RpcController _rpc;
         private readonly ActivePresetService _presetService;
         private readonly NominatimReverseGeocoder _reverseGeocoder;
 
@@ -52,7 +52,7 @@ namespace DriveRPC.Shared.Services
 
         private PresenceUpdateService(
             ILocationService gps,
-            IRpcController rpc,
+            RpcController rpc,
             ActivePresetService presetService,
             NominatimReverseGeocoder reverseGeocoder,
             IBackgroundExecutionManager background)
@@ -69,7 +69,7 @@ namespace DriveRPC.Shared.Services
 
         public void Start()
         {
-            if (_running)
+            if (_running || !_rpc.IsRunning)
                 return;
 
             _running = true;
@@ -86,34 +86,68 @@ namespace DriveRPC.Shared.Services
 
             _running = false;
             _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = null;
         }
 
         private async Task PresenceLoopAsync(CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
+            try
             {
-                await _background.RequestKeepAliveAsync();
+                while (!token.IsCancellationRequested)
+                {
+                    if (!_rpc.IsRunning)
+                    {
+                        await Task.Delay(500, token);
+                        continue;
+                    }
 
-                await Task.Delay(250, token);
+                    if (token.IsCancellationRequested)
+                        break;
 
-                var now = DateTimeOffset.UtcNow;
+                    try
+                    {
+                        await _background.RequestKeepAliveAsync();
+                    }
+                    catch (TaskCanceledException) { break; }
+                    catch (OperationCanceledException) { break; }
 
-                if (!_locationDirty)
-                    continue;
+                    if (token.IsCancellationRequested)
+                        break;
 
-                if (!ShouldConsumeGps())
-                    continue;
+                    await Task.Delay(250, token);
 
-                if (now - _lastUpdate < MinInterval)
-                    continue;
+                    if (token.IsCancellationRequested)
+                        break;
 
-                _locationDirty = false;
-                await UpdatePresenceAsync();
+                    var now = DateTimeOffset.UtcNow;
+
+                    if (!_locationDirty)
+                        continue;
+
+                    if (!ShouldConsumeGps())
+                        continue;
+
+                    if (now - _lastUpdate < MinInterval)
+                        continue;
+
+                    _locationDirty = false;
+
+                    if (token.IsCancellationRequested)
+                        break;
+
+                    await UpdatePresenceAsync();
+                }
             }
+            catch (TaskCanceledException) { }
+            catch (OperationCanceledException) { }
         }
 
         private bool ShouldConsumeGps()
         {
+            if (!_rpc.IsRunning)
+                return false;
+
             var now = DateTimeOffset.UtcNow;
             if (now - _lastGpsConsume < TimeSpan.FromSeconds(1))
                 return false;
@@ -121,7 +155,7 @@ namespace DriveRPC.Shared.Services
             _lastGpsConsume = now;
             return true;
         }
-        
+
         private async Task UpdatePresenceAsync()
         {
             if (_updateInProgress)
@@ -171,7 +205,7 @@ namespace DriveRPC.Shared.Services
                 _updateInProgress = false;
             }
         }
-        
+
         private GpsSnapshot BuildSnapshot()
         {
             var loc = _gps.CurrentLocation;
