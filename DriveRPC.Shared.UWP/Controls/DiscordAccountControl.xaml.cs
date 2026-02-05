@@ -17,11 +17,43 @@ using UWP;
 
 namespace DriveRPC.Shared.UWP.Controls
 {
+    public class DiscordAccountManager
+    {
+        private static readonly Lazy<DiscordAccountManager> _instance =
+            new Lazy<DiscordAccountManager>(() => new DiscordAccountManager());
+
+        public static DiscordAccountManager Instance => _instance.Value;
+
+        public string Token { get; private set; }
+        public DiscordUser User { get; private set; }
+
+        public event EventHandler<string> TokenChanged;
+        public event EventHandler<DiscordUser> UserChanged;
+
+        private DiscordAccountManager() { }
+
+        public async Task SetTokenAsync(string token)
+        {
+            Token = token;
+            TokenChanged?.Invoke(this, token);
+        }
+
+        public void SetUser(DiscordUser user)
+        {
+            User = user;
+            UserChanged?.Invoke(this, user);
+        }
+    }
+
     public sealed partial class DiscordAccountControl : UserControl
     {
+        private ISecureStorage _secureStorage;
+        private string _currentToken;
+        private DiscordUser _user;
+
         public DiscordAccountControl()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
 #if UWP1507
             _secureStorage = UWP_1507.App.SecureStorage;
@@ -29,30 +61,53 @@ namespace DriveRPC.Shared.UWP.Controls
             _secureStorage = App.SecureStorage;
 #endif
 
-            this.Loaded += async (s, e) => await Initialize();
+            Loaded += async (s, e) => await Initialize();
+
+            DiscordAccountManager.Instance.TokenChanged += OnGlobalTokenChanged;
+            DiscordAccountManager.Instance.UserChanged += OnGlobalUserChanged;
         }
-
-        private ISecureStorage _secureStorage;
-
-        private string _currentToken;
-        private DiscordUser _user;
 
         public async Task Initialize()
         {
             await LoadTokenAsync();
 
-            if (_user != null)
+            if (!string.IsNullOrEmpty(_currentToken))
             {
-                UpdateUserUI(_user);
-            }
-            else if (!string.IsNullOrEmpty(_currentToken))
-            {
-                await RefreshUserProfileAsync(_currentToken);
+                if (DiscordAccountManager.Instance.Token != _currentToken)
+                    await DiscordAccountManager.Instance.SetTokenAsync(_currentToken);
+
+                if (DiscordAccountManager.Instance.User != null)
+                {
+                    UpdateUserUI(DiscordAccountManager.Instance.User);
+                }
+                else
+                {
+                    await RefreshUserProfileAsync(_currentToken);
+                }
             }
             else
             {
                 UpdateUserUI(null);
             }
+        }
+
+        private async void OnGlobalTokenChanged(object sender, string token)
+        {
+            _currentToken = token;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                UpdateUserUI(null);
+                return;
+            }
+
+            await RefreshUserProfileAsync(token);
+        }
+
+        private void OnGlobalUserChanged(object sender, DiscordUser user)
+        {
+            _user = user;
+            UpdateUserUI(user);
         }
 
         public async Task SaveTokenAsync(string token)
@@ -62,12 +117,17 @@ namespace DriveRPC.Shared.UWP.Controls
 
             _currentToken = token;
             await _secureStorage.SaveAsync(SecureStorageKeys.UserToken, token);
+
+            await DiscordAccountManager.Instance.SetTokenAsync(token);
         }
 
         public async Task ResetTokenAsync()
         {
             _currentToken = null;
             await _secureStorage.DeleteAsync(SecureStorageKeys.UserToken);
+
+            await DiscordAccountManager.Instance.SetTokenAsync(null);
+            DiscordAccountManager.Instance.SetUser(null);
         }
 
         public async Task LoadTokenAsync()
@@ -75,16 +135,10 @@ namespace DriveRPC.Shared.UWP.Controls
             _currentToken = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
         }
 
-        public class UserChangedEventArgs : EventArgs
-        {
-            public DiscordUser User { get; set; }
-        }
-
-        public event EventHandler<UserChangedEventArgs> UserChanged;
-
         public void UpdateUserUI(DiscordUser user)
         {
             _user = user;
+
             if (user != null && !string.IsNullOrEmpty(_currentToken))
             {
                 DisplayNameText.Text = user.GetDisplayName();
@@ -102,6 +156,13 @@ namespace DriveRPC.Shared.UWP.Controls
 
             UserChanged?.Invoke(this, new UserChangedEventArgs { User = user });
         }
+
+        public class UserChangedEventArgs : EventArgs
+        {
+            public DiscordUser User { get; set; }
+        }
+
+        public event EventHandler<UserChangedEventArgs> UserChanged;
 
         protected async void BtnManage_Click(object sender, RoutedEventArgs e)
         {
@@ -140,14 +201,9 @@ namespace DriveRPC.Shared.UWP.Controls
             stack.Children.Add(pBox);
             stack.Children.Add(vText);
             stack.Children.Add(revealCheck);
-            stack.Children.Add(new Border
-            {
-                Height = 1,
-                Background = (Brush)Application.Current.Resources["SystemControlForegroundBaseLowBrush"],
-                Margin = new Thickness(0, 5, 0, 20)
-            });
 
-            var dialog = new ContentDialog { 
+            var dialog = new ContentDialog
+            {
                 Title = isSignedIn ? "Manage Account" : "Sign In",
                 PrimaryButtonText = "Cancel",
                 Content = stack
@@ -157,9 +213,7 @@ namespace DriveRPC.Shared.UWP.Controls
             {
                 if (!string.IsNullOrWhiteSpace(pBox.Password))
                 {
-                    _currentToken = pBox.Password;
-                    await SaveTokenAsync(_currentToken);
-                    await RefreshUserProfileAsync(_currentToken);
+                    await SaveTokenAsync(pBox.Password);
                     dialog.Hide();
                 }
             }
@@ -182,10 +236,10 @@ namespace DriveRPC.Shared.UWP.Controls
                 };
 
                 btnSave.Click += async (s, args) => await HandleSaveAction();
-
-                btnSignOut.Click += (s, args) => {
+                btnSignOut.Click += async (s, args) =>
+                {
                     dialog.Hide();
-                    ClearToken();
+                    await ResetTokenAsync();
                 };
 
                 stack.Children.Add(btnSave);
@@ -201,31 +255,18 @@ namespace DriveRPC.Shared.UWP.Controls
                 };
 
                 btnSave.Click += async (s, args) => await HandleSaveAction();
-
                 stack.Children.Add(btnSave);
 
                 dialog.SecondaryButtonText = "QR Login";
             }
 
-            dialog.Content = stack;
-
             var result = await dialog.ShowAsync();
-            if (result == ContentDialogResult.Secondary)
-            {
-                if (isSignedIn)
-                {
-                    ClearToken();
-                }
-                else
-                {
-                    OpenQrLogin();
-                }
-            }
+            if (result == ContentDialogResult.Secondary && !isSignedIn)
+                OpenQrLogin();
         }
 
         private async void ClearToken()
         {
-            _currentToken = null;
             await ResetTokenAsync();
             UpdateUserUI(null);
         }
@@ -235,12 +276,12 @@ namespace DriveRPC.Shared.UWP.Controls
             var qrControl = new DiscordQrLoginControl();
             var dialog = new ContentDialog { Content = qrControl, PrimaryButtonText = "Close" };
 
-            qrControl.TokenFound += async (s, token) => {
-                _currentToken = token;
+            qrControl.TokenFound += async (s, token) =>
+            {
                 await SaveTokenAsync(token);
-                await RefreshUserProfileAsync(token);
                 dialog.Hide();
             };
+
             await dialog.ShowAsync();
         }
 
@@ -273,17 +314,18 @@ namespace DriveRPC.Shared.UWP.Controls
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    UpdateUserUI(JsonConvert.DeserializeObject<DiscordUser>(json));
+                    var user = JsonConvert.DeserializeObject<DiscordUser>(json);
+
+                    DiscordAccountManager.Instance.SetUser(user);
                 }
                 else
                 {
-                    UpdateUserUI(null);
+                    DiscordAccountManager.Instance.SetUser(null);
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine("[ACCOUNT] Exception: " + ex);
-                UpdateUserUI(null);
+                DiscordAccountManager.Instance.SetUser(null);
             }
             finally
             {
