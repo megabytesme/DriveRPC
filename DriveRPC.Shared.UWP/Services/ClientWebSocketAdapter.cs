@@ -99,10 +99,20 @@ namespace DriveRPC.Shared.UWP.Services
             catch (Exception ex)
             {
                 const uint WININET_E_CONNECTION_ABORTED = 0x80072EFE;
+
                 if ((uint)ex.HResult == WININET_E_CONNECTION_ABORTED)
                     return;
 
                 Debug.WriteLine($"[WS LOG] MessageReceived exception: {ex}");
+
+                try
+                {
+                    _state = RpcWebSocketState.Closed;
+                    _socket?.Close(1006, "MessageReceived failure");
+                }
+                catch { }
+
+                _signal.Release();
             }
         }
 
