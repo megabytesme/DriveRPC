@@ -31,6 +31,34 @@
             <controls:StatusCard x:Name="StatusCardControl" Visibility="{x:Bind ViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
         </Grid>
 
+        <Grid
+            Grid.Row="1"
+            Margin="20,100,20,100"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Visibility="{x:Bind ViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis_Inverted}}">
+
+            <StackPanel Padding="16" HorizontalAlignment="Center">
+                <FontIcon
+                    FontSize="48"
+                    Foreground="{ThemeResource SystemAccentColor}"
+                    Glyph="&#xE946;" />
+
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="20"
+                    FontWeight="SemiBold"
+                    Text="RPC is not running" />
+
+                <TextBlock
+                    Width="280"
+                    FontSize="14"
+                    Opacity="0.7"
+                    Text="Start RPC to begin sharing."
+                    TextAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
         <CommandBar VerticalAlignment="Bottom">
             <AppBarButton
                 Click="StartRpc_Click"
