@@ -1,11 +1,12 @@
-﻿using System;
+﻿using DriveRPC.Shared.UWP.Controls;
+using DriveRPC.Shared.UWP.Helpers;
+using Microsoft.UI.Xaml.Controls;
+using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Media.Imaging;
-using Microsoft.UI.Xaml.Controls;
-using DriveRPC.Shared.UWP.Helpers;
-using DriveRPC.Shared.UWP.Controls;
+using Windows.UI.Xaml.Navigation;
 
 namespace UWP.Views
 {
@@ -20,6 +21,13 @@ namespace UWP.Views
                 NavView.SelectedItem = NavView.MenuItems[0];
                 NavigateTo("Home");
             }
+        }
+
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            await HeaderAccountControl.Initialize();
         }
 
         private void NavView_SelectionChanged(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs args)

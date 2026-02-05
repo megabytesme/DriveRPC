@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Navigation;
 using static DriveRPC.Shared.UWP.Controls.DiscordAccountControl;
 
 namespace DriveRPC.Shared.UWP.Views
@@ -23,6 +24,13 @@ namespace DriveRPC.Shared.UWP.Views
             this.InitializeComponent();
             ApplyAppearanceStyling();
             NavListBox.SelectedIndex = 0;
+        }
+
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+        
+            await HeaderAccountControl.Initialize();
         }
 
         private void ApplyAppearanceStyling()
