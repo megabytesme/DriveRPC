@@ -42,10 +42,25 @@
                     Visibility="{x:Bind StatusViewModel.IsRunning, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
 
                 <CommandBar.Content>
-                    <TextBlock
-                        x:Name="StatusTextBlock"
-                        Margin="40,12,0,0"
-                        Text="Status: Unknown" />
+                    <StackPanel
+                        Margin="0,12,0,0"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <ProgressRing
+                            Width="20"
+                            Height="20"
+                            Margin="12,0,0,0"
+                            Foreground="{ThemeResource SystemAccentColor}"
+                            IsActive="True"
+                            Visibility="{x:Bind StatusViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVis}}" />
+
+                        <TextBlock
+                            x:Name="StatusTextBlock"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            Text="Status: Unknown"
+                            TextWrapping="WrapWholeWords" />
+                    </StackPanel>
                 </CommandBar.Content>
             </CommandBar>
         </Grid>
