@@ -168,45 +168,55 @@ namespace DriveRPC.Shared.Services
             PresenceUpdated?.Invoke();
         }
 
+        private readonly SemaphoreSlim _gate = new SemaphoreSlim(1, 1);
+
         public async Task<string> CacheImageAsync(string url)
         {
-            if (string.IsNullOrWhiteSpace(url))
-                return null;
-
-            if (_memoryCache.TryGetValue(url, out var mem))
-                return mem;
-
-            var disk = await _fileCache.LoadAsync(url);
-            if (!string.IsNullOrWhiteSpace(disk))
-            {
-                _memoryCache[url] = disk;
-                return disk;
-            }
-
-            var token = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
-            if (string.IsNullOrWhiteSpace(token))
-                return null;
-
+            await _gate.WaitAsync();
             try
             {
-                var proxied = await _rest.ResolveExternalImageAsync(url, AppId, token);
+                if (string.IsNullOrWhiteSpace(url))
+                    return null;
 
-                _memoryCache[url] = proxied;
-                await _fileCache.SaveAsync(url, proxied);
+                if (_memoryCache.TryGetValue(url, out var mem))
+                    return mem;
 
-                return proxied;
+                var disk = await _fileCache.LoadAsync(url);
+                if (!string.IsNullOrWhiteSpace(disk))
+                {
+                    _memoryCache[url] = disk;
+                    return disk;
+                }
+
+                var token = await _secureStorage.LoadAsync(SecureStorageKeys.UserToken);
+                if (string.IsNullOrWhiteSpace(token))
+                    return null;
+
+                try
+                {
+                    var proxied = await _rest.ResolveExternalImageAsync(url, AppId, token);
+
+                    _memoryCache[url] = proxied;
+                    await _fileCache.SaveAsync(url, proxied);
+
+                    return proxied;
+                }
+                catch (DiscordRateLimitException rl)
+                {
+                    StatusText = $"Rate limited: retry after {rl.RetryAfter:0.0}s";
+                    PresenceUpdated?.Invoke();
+                    return null;
+                }
+                catch (DiscordRestException restEx)
+                {
+                    StatusText = "REST error: " + restEx.Message;
+                    PresenceUpdated?.Invoke();
+                    return null;
+                }
             }
-            catch (DiscordRateLimitException rl)
+            finally
             {
-                StatusText = $"Rate limited: retry after {rl.RetryAfter:0.0}s";
-                PresenceUpdated?.Invoke();
-                return null;
-            }
-            catch (DiscordRestException restEx)
-            {
-                StatusText = "REST error: " + restEx.Message;
-                PresenceUpdated?.Invoke();
-                return null;
+                _gate.Release();
             }
         }
 
