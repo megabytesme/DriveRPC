@@ -679,7 +679,28 @@ namespace DriveRPC.Shared.UWP.Views
             _flyoutTargetPreset = null;
         }
 
-        protected abstract Task ApplyGpsSourceToRealServiceAsync();
+        protected async Task ApplyGpsSourceToRealServiceAsync()
+        {
+            var realGps = App.GpsService;
+
+            if (ViewModel.SelectedGpsSource == GpsSource.Live)
+            {
+                realGps.StopReplay();
+                await realGps.StartListeningAsync();
+            }
+            else
+            {
+                realGps.StopListening();
+
+                if (ViewModel.ReplayBuffer != null)
+                {
+                    var realStream = new MemoryStream(ViewModel.ReplayBuffer.ToArray());
+                    realStream.Position = 0;
+
+                    await realGps.StartReplayAsync(realStream);
+                }
+            }
+        }
 
         protected async void Save_Click(object sender, RoutedEventArgs e) => await SaveInternalAsync();
         protected async void Apply_Click(object sender, RoutedEventArgs e) => await ApplyInternalAsync();
