@@ -177,6 +177,33 @@ namespace DriveRPC.Shared.UWP.Views
             _ = ApplyGpsSourceToRealServiceAsync();
         }
 
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+
+            Loaded -= OnLoaded;
+            SizeChanged -= OnSizeChanged;
+            this.KeyDown -= AppearancePage_KeyDown;
+
+            if (StatusViewModel != null)
+                StatusViewModel.PropertyChanged -= StatusViewModel_PropertyChanged;
+
+            if (ViewModel != null)
+            {
+                ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+                ViewModel.RequestReplayFile -= OnRequestReplayFile;
+            }
+
+            if (_presetFlyout != null)
+            {
+                foreach (var item in _presetFlyout.Items)
+                {
+                    if (item is MenuFlyoutItem m)
+                        m.Click -= DuplicatePreset_Click;
+                }
+            }
+        }
+
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             ApplyResponsiveLayout();
