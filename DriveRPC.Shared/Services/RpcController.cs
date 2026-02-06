@@ -97,11 +97,12 @@ namespace DriveRPC.Shared.Services
                 {
                     await _gateway.ConnectAsync();
                 }
-                catch (DiscordGatewayException gw)
+                catch (Exception ex)
                 {
-                    StatusText = "Failed to connect to Discord: " + gw.Message;
+                    Debug.WriteLine($"Initial connection failed ({ex.Message}), waiting for auto-reconnect...");
+
+                    StatusText = "Connection failed — retrying in background…";
                     PresenceUpdated?.Invoke();
-                    return;
                 }
             }
             finally
