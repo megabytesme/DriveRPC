@@ -43,9 +43,11 @@
 
                 <CommandBar.Content>
                     <StackPanel
+                        x:Name="StatusCommandBarContent"
                         Margin="0,12,0,0"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
+
                         <ProgressRing
                             Width="20"
                             Height="20"

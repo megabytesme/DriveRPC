@@ -16,6 +16,9 @@ namespace DriveRPC.Shared.UWP.Views
         {
             InitializeComponent();
 
+            UpdateCommandBarMargin(this.ActualWidth);
+            this.SizeChanged += OnSizeChanged;
+
             var internalBorder = PreviewStatusCard.FindName("RootBorder") as Border;
             if (internalBorder != null)
             {
@@ -60,6 +63,23 @@ namespace DriveRPC.Shared.UWP.Views
                 SaveButton,
                 PauseButton,
                 ResumeButton);
+        }
+
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateCommandBarMargin(e.NewSize.Width);
+        }
+
+        private void UpdateCommandBarMargin(double width)
+        {
+            if (width <= 640)
+            {
+                StatusCommandBarContent.Margin = new Thickness(32, 12, 0, 0);
+            }
+            else
+            {
+                StatusCommandBarContent.Margin = new Thickness(0, 12, 0, 0);
+            }
         }
     }
 }
