@@ -65,6 +65,8 @@ namespace DriveRPC.Shared.ViewModels
         }
 
         public bool IsRunning => _rpc.IsRunning;
+        public bool IsReady => _rpc.IsReady;
+        public bool IsLoading => _rpc.IsLoading;
         public string StatusText => _rpc.StatusText;
 
         public string PresenceStatus => _rpc.CurrentPresence?.Status;
@@ -202,6 +204,8 @@ namespace DriveRPC.Shared.ViewModels
         private void OnPresenceUpdated()
         {
             OnPropertyChanged(nameof(IsRunning));
+            OnPropertyChanged(nameof(IsReady));
+            OnPropertyChanged(nameof(IsLoading));
             OnPropertyChanged(nameof(StatusText));
 
             OnPropertyChanged(nameof(PresenceStatus));

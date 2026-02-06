@@ -32,6 +32,10 @@ namespace DriveRPC.Shared.Services
         public GatewayState GatewayState { get; private set; } = GatewayState.Disconnected;
         public int LastReconnectAttempt { get; private set; }
         public bool IsRunning => ConnectionState == RpcConnectionState.Running;
+        public bool IsReady => IsRunning &&
+                               (GatewayState == GatewayState.Ready ||
+                                GatewayState == GatewayState.Running);
+        public bool IsLoading => IsRunning && !IsReady;
 
         public string StatusText { get; private set; } = "DriveRPC is not running";
 
