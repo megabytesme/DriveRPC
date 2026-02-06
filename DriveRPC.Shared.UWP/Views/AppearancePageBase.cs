@@ -174,7 +174,7 @@ namespace DriveRPC.Shared.UWP.Views
             UpdateStatusText();
             ApplyResponsiveLayout();
 
-            await ApplyGpsSourceToRealServiceAsync();
+            _ = ApplyGpsSourceToRealServiceAsync();
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
