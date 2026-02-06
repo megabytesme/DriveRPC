@@ -390,26 +390,6 @@ namespace DriveRPC.Shared.ViewModels
             }
         }
 
-        public async Task RestartGpsAsync()
-        {
-            if (SelectedGpsSource == GpsSource.Live)
-            {
-                if (_gps.IsReplaying)
-                {
-                    _gps.StopReplay();
-                    OnPropertyChanged(nameof(IsReplaying));
-                }
-
-                if (_gps.IsListening)
-                    _gps.StopListening();
-
-                await _gps.StartListeningAsync();
-            }
-            else if (SelectedGpsSource == GpsSource.Replay)
-            {
-            }
-        }
-
         public MemoryStream ReplayBuffer { get; private set; }
 
         public async Task StartReplayWithBufferAsync(Stream fileStream)
