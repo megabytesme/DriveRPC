@@ -189,18 +189,15 @@ namespace UWP
             {
                 if (rootFrame.Content == null)
                 {
-                    //if (FirstRunService.IsFirstRunAsync().GetAwaiter().GetResult())
-                   // {
-                        //rootFrame.Navigate(NavigationHelper.GetPageType("OOBE"), e.Arguments);
-                   // }
-                   // else
-                   // {
-                        // When the navigation stack isn't restored navigate to the first page,
-                        // configuring the new page by passing required information as a navigation
-                        // parameter
+                    if (await FirstRunService.IsFirstRunAsync())
+                    {
+                        rootFrame.Navigate(NavigationHelper.GetPageType("OOBE"), e.Arguments);
+                    }
+                    else
+                    {
                         Type shellType = NavigationHelper.GetPageType("Shell");
                         rootFrame.Navigate(shellType, e.Arguments);
-                    //}
+                    }
                 }
                 Window.Current.Activate();
 

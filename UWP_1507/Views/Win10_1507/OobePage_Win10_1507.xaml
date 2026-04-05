@@ -1,0 +1,200 @@
+﻿<page:OobePageBase
+    x:Class="DriveRPC.Shared.UWP.Views.OobePage_Win10_1507"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:DriveRPC.Shared.UWP.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:DriveRPC.Shared.UWP.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:page="using:DriveRPC.Shared.UWP.Views"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:EnumToIntConverter x:Key="EnumToIntConverter" />
+
+        <Style x:Key="CardBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Margin" Value="24" />
+            <Setter Property="MaxWidth" Value="500" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <FlipView
+            x:Name="OobeFlipView"
+            ManipulationMode="None">
+
+            <FlipViewItem>
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Padding="30">
+                        <TextBlock
+                            Margin="0,0,0,12"
+                            FontSize="28"
+                            FontWeight="Bold"
+                            Text="Welcome" />
+                        <TextBlock
+                            Margin="0,0,0,24"
+                            Style="{ThemeResource BodyTextBlockStyle}"
+                            Text="DriveRPC links your real-world driving to your Discord status." />
+                        <Button
+                            HorizontalAlignment="Stretch"
+                            Click="Next_Click"
+                            Content="Get Started" />
+                    </StackPanel>
+                </Border>
+            </FlipViewItem>
+
+            <FlipViewItem>
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Padding="30">
+                        <TextBlock
+                            Margin="0,0,0,12"
+                            FontSize="24"
+                            FontWeight="Bold"
+                            Text="Discord" />
+                        <local:DiscordAccountControl
+                            x:Name="OobeAccountCard"
+                            Margin="0,0,0,24"
+                            UserChanged="OnAccountUserChanged" />
+                        <Button
+                            x:Name="BtnDiscordNext"
+                            HorizontalAlignment="Right"
+                            Click="Next_Click"
+                            Content="Next"
+                            IsEnabled="False" />
+                    </StackPanel>
+                </Border>
+            </FlipViewItem>
+
+            <FlipViewItem>
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Padding="30">
+                        <TextBlock
+                            Margin="0,0,0,24"
+                            FontSize="24"
+                            FontWeight="Bold"
+                            Text="Permissions" />
+                        <Button
+                            x:Name="BtnLocation"
+                            HorizontalAlignment="Stretch"
+                            Click="BtnLocation_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    x:Name="BtnLocationText"
+                                    VerticalAlignment="Center"
+                                    Text="Grant Location Access" />
+                                <TextBlock
+                                    x:Name="BtnLocationIcon"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe MDL2 Assets" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            x:Name="BtnPermission"
+                            Margin="0,8,0,24"
+                            HorizontalAlignment="Stretch"
+                            Click="BtnPermission_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    x:Name="BtnPermissionText"
+                                    VerticalAlignment="Center"
+                                    Text="Enable Background" />
+                                <TextBlock
+                                    x:Name="BtnPermissionIcon"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe MDL2 Assets" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            HorizontalAlignment="Right"
+                            Click="Next_Click"
+                            Content="Next" />
+                    </StackPanel>
+                </Border>
+            </FlipViewItem>
+
+            <FlipViewItem>
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Padding="30">
+                        <TextBlock
+                            Margin="0,0,0,12"
+                            FontSize="24"
+                            FontWeight="Bold"
+                            Text="Vehicle Profile" />
+                        <TextBox
+                            Margin="0,0,0,12"
+                            Header="Car Name"
+                            Text="{Binding CurrentPreset.CarName, Mode=TwoWay}" />
+                        <TextBox
+                            Margin="0,0,0,12"
+                            Header="Image URL"
+                            Text="{Binding CurrentPreset.CarImageUrl, Mode=TwoWay}" />
+                        <TextBox Header="Image Text" Text="{Binding CurrentPreset.CarImageText, Mode=TwoWay}" />
+                        <Button
+                            Margin="0,24,0,0"
+                            HorizontalAlignment="Right"
+                            Click="Next_Click"
+                            Content="Next" />
+                    </StackPanel>
+                </Border>
+            </FlipViewItem>
+
+            <FlipViewItem>
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Padding="30">
+                            <TextBlock
+                                Margin="0,0,0,12"
+                                FontSize="24"
+                                FontWeight="Bold"
+                                Text="Details" />
+
+                            <ComboBox
+                                Margin="0,0,0,12"
+                                HorizontalAlignment="Stretch"
+                                Header="Speed Mode"
+                                SelectedIndex="{Binding CurrentPreset.SpeedMode, Converter={StaticResource EnumToIntConverter}, Mode=TwoWay}">
+                                <ComboBoxItem Content="Off" />
+                                <ComboBoxItem Content="Exact Speed" />
+                                <ComboBoxItem Content="Speed Range" />
+                                <ComboBoxItem Content="Emoji Only" />
+                            </ComboBox>
+
+                            <ComboBox
+                                Margin="0,0,0,12"
+                                HorizontalAlignment="Stretch"
+                                Header="Location Privacy"
+                                SelectedIndex="{Binding CurrentPreset.LocationMode, Converter={StaticResource EnumToIntConverter}, Mode=TwoWay}">
+                                <ComboBoxItem Content="Country" />
+                                <ComboBoxItem Content="Region" />
+                                <ComboBoxItem Content="City" />
+                                <ComboBoxItem Content="Town" />
+                                <ComboBoxItem Content="Road" />
+                            </ComboBox>
+
+                            <Slider
+                                Header="Seat Count"
+                                Maximum="8"
+                                Minimum="1"
+                                Value="{Binding CurrentPreset.SeatCount, Mode=TwoWay}" />
+                            <ToggleSwitch
+                                Margin="0,12,0,24"
+                                Header="Show Compass"
+                                IsOn="{Binding CurrentPreset.ShowCompass, Mode=TwoWay}" />
+
+                            <Button
+                                HorizontalAlignment="Stretch"
+                                Click="BtnFinish_Click"
+                                Content="Finish Setup" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </FlipViewItem>
+        </FlipView>
+    </Grid>
+</page:OobePageBase>

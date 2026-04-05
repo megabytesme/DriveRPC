@@ -16,11 +16,11 @@ namespace DriveRPC.Shared.UWP.Helpers
         {
             var mode = AppearanceService.Current;
 
-            if (pageKey == "OOBE") // todo - add OOBE
+            if (pageKey == "OOBE")
             {
-                if (mode == AppearanceMode.Win11) return typeof(MainPage);
-                if (mode == AppearanceMode.Win10_1709) return typeof(MainPage);
-                return typeof(MainPage);
+                if (mode == AppearanceMode.Win11) return typeof(OobePage_Win11);
+                if (mode == AppearanceMode.Win10_1709) return typeof(OobePage_Win10_1709);
+                return typeof(OobePage_Win10_1507);
             }
 
             if (pageKey == "Shell")
@@ -57,7 +57,7 @@ namespace DriveRPC.Shared.UWP.Helpers
 #else
         public static Type GetPageType(string pageKey)
         {
-            if (pageKey == "OOBE") return typeof(MainPage); // todo - add OOBE
+            if (pageKey == "OOBE") return typeof(OobePage_Win10_1507);
             if (pageKey == "Shell") return typeof(MainPage);
             if (pageKey == "Home") return typeof(HomePage_Win10_1507);
             if (pageKey == "Appearance") return typeof(AppearancePage_Win10_1507);

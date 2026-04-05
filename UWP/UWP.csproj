@@ -126,6 +126,9 @@
     <Compile Include="Views\Win10_1507\HomePage_Win10_1507.xaml.cs">
       <DependentUpon>HomePage_Win10_1507.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Win10_1507\OobePage_Win10_1507.xaml.cs">
+      <DependentUpon>OobePage_Win10_1507.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Win10_1507\SettingsPage_Win10_1507.xaml.cs">
       <DependentUpon>SettingsPage_Win10_1507.xaml</DependentUpon>
     </Compile>
@@ -135,6 +138,9 @@
     <Compile Include="Views\Win11\HomePage_Win11.xaml.cs">
       <DependentUpon>HomePage_Win11.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Win11\OobePage_Win11.xaml.cs">
+      <DependentUpon>OobePage_Win11.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Win11\SettingsPage_Win11.xaml.cs">
       <DependentUpon>SettingsPage_Win11.xaml</DependentUpon>
     </Compile>
@@ -143,6 +149,9 @@
     </Compile>
     <Compile Include="Views\Win10_1709\HomePage_Win10_1709.xaml.cs">
       <DependentUpon>HomePage_Win10_1709.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Win10_1709\OobePage_Win10_1709.xaml.cs">
+      <DependentUpon>OobePage_Win10_1709.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Win10_1709\SettingsPage_Win10_1709.xaml.cs">
       <DependentUpon>SettingsPage_Win10_1709.xaml</DependentUpon>
@@ -240,6 +249,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\Win10_1507\OobePage_Win10_1507.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\Win10_1507\SettingsPage_Win10_1507.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -252,6 +265,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\Win11\OobePage_Win11.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\Win11\SettingsPage_Win11.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -261,6 +278,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Win10_1709\HomePage_Win10_1709.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Win10_1709\OobePage_Win10_1709.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
