@@ -51,7 +51,11 @@ namespace DriveRPC.Shared.UWP.Views
                 ApplyButton,
                 SaveButton,
                 PauseButton,
-                ResumeButton);
+                ResumeButton,
+                BluetoothDeviceTextBlock,
+                SelectBluetoothDeviceButton,
+                ClearBluetoothDeviceButton,
+                BluetoothScanProgressRing);
         }
     }
 }

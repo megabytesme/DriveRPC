@@ -45,6 +45,7 @@ namespace UWP_1507
         public static IBackgroundExecutionManager BackgroundManager { get; private set; }
         public static ISettingsNavigator SettingsNavigator { get; set; } = new UwpSettingsNavigator();
         public static StatusViewModel StatusViewModel { get; private set; }
+        public static BluetoothRecognitionService BluetoothRecognitionService { get; private set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -130,6 +131,9 @@ namespace UWP_1507
                 nominatimHttp,
                 BackgroundManager
             );
+
+            BluetoothRecognitionService = new BluetoothRecognitionService(PresetStore, PresetService);
+            BluetoothRecognitionService.Start();
 
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -270,6 +274,7 @@ namespace UWP_1507
             GpsService.StopListening();
 
             PresenceUpdateService.Instance?.Stop();
+            BluetoothRecognitionService?.Stop();
 
             if (RpcController.IsRunning)
                 await RpcController.StopAsync();

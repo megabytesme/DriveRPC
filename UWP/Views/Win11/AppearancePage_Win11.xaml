@@ -116,6 +116,34 @@
                         <TextBox Header="Car name" Text="{x:Bind ViewModel.EditingPreset.CarName, Mode=TwoWay}" />
                         <TextBox Header="Car image URL" Text="{x:Bind ViewModel.EditingPreset.CarImageUrl, Mode=TwoWay}" />
                         <TextBox Header="Car image text" Text="{x:Bind ViewModel.EditingPreset.CarImageText, Mode=TwoWay}" />
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                Text="Linked Bluetooth device" />
+                            <TextBlock
+                                x:Name="BluetoothDeviceTextBlock"
+                                Text="No Bluetooth device selected"
+                                TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button
+                                    x:Name="SelectBluetoothDeviceButton"
+                                    Click="SelectBluetoothDevice_Click"
+                                    Content="Choose Device" />
+                                <ProgressRing
+                                    x:Name="BluetoothScanProgressRing"
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    IsActive="False"
+                                    Visibility="Collapsed" />
+                                <Button
+                                    x:Name="ClearBluetoothDeviceButton"
+                                    Click="ClearBluetoothDevice_Click"
+                                    Content="Clear"
+                                    Visibility="Collapsed" />
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                 </muxc:Expander>
 

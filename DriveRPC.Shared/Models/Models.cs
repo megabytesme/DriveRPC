@@ -24,6 +24,8 @@ namespace DriveRPC.Shared.Models
         private bool _showParty = false;
         private string _cachedLargeImageKey;
         private string _cachedSmallImageKey;
+        private string _registeredBluetoothDeviceId;
+        private string _registeredBluetoothDeviceName;
 
         public string Name
         {
@@ -115,6 +117,18 @@ namespace DriveRPC.Shared.Models
             set { _cachedSmallImageKey = value; OnPropertyChanged(); }
         }
 
+        public string RegisteredBluetoothDeviceId
+        {
+            get => _registeredBluetoothDeviceId;
+            set { _registeredBluetoothDeviceId = value; OnPropertyChanged(); }
+        }
+
+        public string RegisteredBluetoothDeviceName
+        {
+            get => _registeredBluetoothDeviceName;
+            set { _registeredBluetoothDeviceName = value; OnPropertyChanged(); }
+        }
+
         public AppearancePreset Clone()
         {
             return new AppearancePreset
@@ -133,7 +147,9 @@ namespace DriveRPC.Shared.Models
                 SeatsUsed = this.SeatsUsed,
                 ShowParty = this.ShowParty,
                 CachedLargeImageKey = this.CachedLargeImageKey,
-                CachedSmallImageKey = this.CachedSmallImageKey
+                CachedSmallImageKey = this.CachedSmallImageKey,
+                RegisteredBluetoothDeviceId = this.RegisteredBluetoothDeviceId,
+                RegisteredBluetoothDeviceName = this.RegisteredBluetoothDeviceName
             };
         }
 
@@ -156,6 +172,8 @@ namespace DriveRPC.Shared.Models
             ShowParty = other.ShowParty;
             CachedLargeImageKey = other.CachedLargeImageKey;
             CachedSmallImageKey = other.CachedSmallImageKey;
+            RegisteredBluetoothDeviceId = other.RegisteredBluetoothDeviceId;
+            RegisteredBluetoothDeviceName = other.RegisteredBluetoothDeviceName;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

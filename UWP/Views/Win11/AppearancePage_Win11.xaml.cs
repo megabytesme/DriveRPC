@@ -62,7 +62,11 @@ namespace DriveRPC.Shared.UWP.Views
                 ApplyButton,
                 SaveButton,
                 PauseButton,
-                ResumeButton);
+                ResumeButton,
+                BluetoothDeviceTextBlock,
+                SelectBluetoothDeviceButton,
+                ClearBluetoothDeviceButton,
+                BluetoothScanProgressRing);
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)

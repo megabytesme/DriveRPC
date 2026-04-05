@@ -15,6 +15,10 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
+using DriveRPC.Shared.UWP.Controls;
+using DriveRPC.Shared.UWP.Services;
+using DriveRPC.Shared.UWP.Models;
+
 #if UWP1507
 using UWP_1507;
 #else
@@ -53,6 +57,15 @@ namespace DriveRPC.Shared.UWP.Views
         private Button _saveButton;
         private Button _pauseButton;
         private Button _resumeButton;
+        private TextBlock _bluetoothDeviceTextBlock;
+        private Button _selectBluetoothDeviceButton;
+        private Button _clearBluetoothDeviceButton;
+        private ProgressRing _bluetoothScanProgressRing;
+        private bool _isScanningBluetoothDevices;
+        private BluetoothDiscoverySession _activeBluetoothDiscoverySession;
+        private BluetoothDevicePickerDialogBase _activeBluetoothPickerDialog;
+        private DispatcherTimer _bluetoothScanTimer;
+        private DateTimeOffset _bluetoothScanStartedAt;
 
         protected void InitializeSharedLogic(
             AppearancePageViewModel viewModel,
@@ -71,7 +84,11 @@ namespace DriveRPC.Shared.UWP.Views
             Button applyButton,
             Button saveButton,
             Button pauseButton,
-            Button resumeButton)
+            Button resumeButton,
+            TextBlock bluetoothDeviceTextBlock = null,
+            Button selectBluetoothDeviceButton = null,
+            Button clearBluetoothDeviceButton = null,
+            ProgressRing bluetoothScanProgressRing = null)
         {
             ViewModel = viewModel;
             StatusViewModel = statusViewModel;
@@ -91,6 +108,10 @@ namespace DriveRPC.Shared.UWP.Views
             _saveButton = saveButton;
             _pauseButton = pauseButton;
             _resumeButton = resumeButton;
+            _bluetoothDeviceTextBlock = bluetoothDeviceTextBlock;
+            _selectBluetoothDeviceButton = selectBluetoothDeviceButton;
+            _clearBluetoothDeviceButton = clearBluetoothDeviceButton;
+            _bluetoothScanProgressRing = bluetoothScanProgressRing;
 
             DataContext = ViewModel;
 
@@ -170,6 +191,7 @@ namespace DriveRPC.Shared.UWP.Views
 
             WireFieldBindings();
             UpdateGpsUiVisibility();
+            UpdateBluetoothDeviceUi();
             UpdatePreviewCard();
             UpdateStatusText();
             ApplyResponsiveLayout();
@@ -179,6 +201,8 @@ namespace DriveRPC.Shared.UWP.Views
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            CancelBluetoothDeviceSelection();
+
             base.OnNavigatedFrom(e);
 
             Loaded -= OnLoaded;
@@ -519,6 +543,76 @@ namespace DriveRPC.Shared.UWP.Views
 
             _replaySlider.Maximum = ViewModel.ReplayDuration.TotalSeconds;
             _replaySlider.Value = ViewModel.ReplayPosition.TotalSeconds;
+            UpdateBluetoothDeviceUi();
+        }
+
+        private void UpdateBluetoothDeviceUi()
+        {
+            if (_bluetoothDeviceTextBlock == null || ViewModel?.EditingPreset == null)
+                return;
+
+            var name = ViewModel.EditingPreset.RegisteredBluetoothDeviceName;
+            _bluetoothDeviceTextBlock.Text = string.IsNullOrWhiteSpace(name)
+                ? "No Bluetooth device selected"
+                : name;
+
+            if (_clearBluetoothDeviceButton != null)
+            {
+                _clearBluetoothDeviceButton.Visibility = string.IsNullOrWhiteSpace(name)
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
+                _clearBluetoothDeviceButton.IsEnabled = !_isScanningBluetoothDevices;
+            }
+
+            if (_selectBluetoothDeviceButton != null)
+            {
+                _selectBluetoothDeviceButton.IsEnabled = !_isScanningBluetoothDevices;
+                _selectBluetoothDeviceButton.Content = _isScanningBluetoothDevices
+                    ? "Scanning..."
+                    : "Choose Device";
+            }
+
+            if (_bluetoothScanProgressRing != null)
+            {
+                _bluetoothScanProgressRing.IsActive = _isScanningBluetoothDevices;
+                _bluetoothScanProgressRing.Visibility = _isScanningBluetoothDevices
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
+        }
+
+        private void SetBluetoothScanState(bool isScanning)
+        {
+            _isScanningBluetoothDevices = isScanning;
+            UpdateBluetoothDeviceUi();
+        }
+
+        private void CancelBluetoothDeviceSelection()
+        {
+            if (_bluetoothScanTimer != null)
+            {
+                _bluetoothScanTimer.Stop();
+                _bluetoothScanTimer.Tick -= BluetoothScanTimer_Tick;
+                _bluetoothScanTimer = null;
+            }
+
+            _activeBluetoothDiscoverySession?.Dispose();
+            _activeBluetoothDiscoverySession = null;
+
+            if (_activeBluetoothPickerDialog != null)
+            {
+                try
+                {
+                    _activeBluetoothPickerDialog.Hide();
+                }
+                catch
+                {
+                }
+
+                _activeBluetoothPickerDialog = null;
+            }
+
+            SetBluetoothScanState(false);
         }
 
         protected void SpeedModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -772,6 +866,7 @@ namespace DriveRPC.Shared.UWP.Views
                 ViewModel.EditingPreset = editing;
 
             await ViewModel.ApplyChangesAsyncForPresetAsync(preset, ViewModel.EditingPreset);
+            await App.BluetoothRecognitionService.RefreshNowAsync();
 
             var clone = preset.Clone();
             _editingCache[preset] = clone;
@@ -826,6 +921,111 @@ namespace DriveRPC.Shared.UWP.Views
         {
             await StatusViewModel.StopAsync();
             UpdateStatusText();
+        }
+
+        protected async void SelectBluetoothDevice_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel?.EditingPreset == null || _isScanningBluetoothDevices)
+                return;
+
+            SetBluetoothScanState(true);
+
+            try
+            {
+                var session = App.BluetoothRecognitionService.StartDeviceDiscoverySession();
+                var dialog = CreateBluetoothPickerDialog(session.ExpectedScanDuration.TotalSeconds);
+
+                _activeBluetoothDiscoverySession = session;
+                _activeBluetoothPickerDialog = dialog;
+                _bluetoothScanStartedAt = DateTimeOffset.Now;
+                _bluetoothScanTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(1)
+                };
+                _bluetoothScanTimer.Tick += BluetoothScanTimer_Tick;
+                _bluetoothScanTimer.Start();
+
+                session.DeviceUpdated += BluetoothDiscoverySession_DeviceUpdated;
+                session.DeviceRemoved += BluetoothDiscoverySession_DeviceRemoved;
+                session.ScanCompleted += BluetoothDiscoverySession_ScanCompleted;
+
+                var result = await dialog.ShowAsync();
+                if (result != ContentDialogResult.Primary || dialog.SelectedDevice == null)
+                    return;
+
+                ViewModel.EditingPreset.RegisteredBluetoothDeviceId = dialog.SelectedDevice.Id;
+                ViewModel.EditingPreset.RegisteredBluetoothDeviceName = dialog.SelectedDevice.Name;
+            }
+            finally
+            {
+                if (_activeBluetoothDiscoverySession != null)
+                {
+                    _activeBluetoothDiscoverySession.DeviceUpdated -= BluetoothDiscoverySession_DeviceUpdated;
+                    _activeBluetoothDiscoverySession.DeviceRemoved -= BluetoothDiscoverySession_DeviceRemoved;
+                    _activeBluetoothDiscoverySession.ScanCompleted -= BluetoothDiscoverySession_ScanCompleted;
+                }
+
+                CancelBluetoothDeviceSelection();
+                UpdateBluetoothDeviceUi();
+            }
+        }
+
+        private void BluetoothScanTimer_Tick(object sender, object e)
+        {
+            if (_activeBluetoothPickerDialog == null)
+                return;
+
+            var elapsedSeconds = (DateTimeOffset.Now - _bluetoothScanStartedAt).TotalSeconds;
+            _activeBluetoothPickerDialog.SetElapsedSeconds(elapsedSeconds);
+        }
+
+        private async void BluetoothDiscoverySession_DeviceUpdated(BluetoothDeviceOption option)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                _activeBluetoothPickerDialog?.UpsertDevice(option);
+            });
+        }
+
+        private async void BluetoothDiscoverySession_DeviceRemoved(string deviceId)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                _activeBluetoothPickerDialog?.RemoveDevice(deviceId);
+            });
+        }
+
+        private async void BluetoothDiscoverySession_ScanCompleted()
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                _bluetoothScanTimer?.Stop();
+                _activeBluetoothPickerDialog?.SetCompleted();
+                SetBluetoothScanState(false);
+            });
+        }
+
+        private BluetoothDevicePickerDialogBase CreateBluetoothPickerDialog(double expectedDurationSeconds)
+        {
+            switch (AppearanceService.Current)
+            {
+                case AppearanceMode.Win11:
+                    return new BluetoothDevicePickerDialog_Win11(expectedDurationSeconds);
+                case AppearanceMode.Win10_1709:
+                    return new BluetoothDevicePickerDialog_Win10_1709(expectedDurationSeconds);
+                default:
+                    return new BluetoothDevicePickerDialog_Win10_1507(expectedDurationSeconds);
+            }
+        }
+
+        protected void ClearBluetoothDevice_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel?.EditingPreset == null)
+                return;
+
+            ViewModel.EditingPreset.RegisteredBluetoothDeviceId = null;
+            ViewModel.EditingPreset.RegisteredBluetoothDeviceName = null;
+            UpdateBluetoothDeviceUi();
         }
     }
 }

@@ -83,6 +83,38 @@
                     Header="Car image text"
                     Text="{x:Bind ViewModel.EditingPreset.CarImageText, Mode=TwoWay}" />
 
+                <StackPanel Margin="0,0,0,8">
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                        Text="Linked Bluetooth device" />
+                    <TextBlock
+                        x:Name="BluetoothDeviceTextBlock"
+                        Margin="0,4,0,8"
+                        Text="No Bluetooth device selected"
+                        TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button
+                            x:Name="SelectBluetoothDeviceButton"
+                            Margin="0,0,8,0"
+                            Click="SelectBluetoothDevice_Click"
+                            Content="Choose Device" />
+                        <ProgressRing
+                            x:Name="BluetoothScanProgressRing"
+                            Width="20"
+                            Height="20"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            IsActive="False"
+                            Visibility="Collapsed" />
+                        <Button
+                            x:Name="ClearBluetoothDeviceButton"
+                            Click="ClearBluetoothDevice_Click"
+                            Content="Clear"
+                            Visibility="Collapsed" />
+                    </StackPanel>
+                </StackPanel>
+
                 <Rectangle
                     Height="1"
                     Margin="0,8,0,8"
