@@ -60,6 +60,25 @@
             </StackPanel>
 
             <StackPanel
+                BorderBrush="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                BorderThickness="1"
+                Style="{StaticResource GroupPanelStyle}">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
+                    Text="Transfer" />
+                <Button
+                    Margin="0,0,0,8"
+                    HorizontalAlignment="Stretch"
+                    Click="BtnExportSettings_Click"
+                    Content="Export Settings &amp; Vehicles" />
+                <Button
+                    HorizontalAlignment="Stretch"
+                    Click="BtnImportSettings_Click"
+                    Content="Import Settings &amp; Vehicles" />
+            </StackPanel>
+
+            <StackPanel
                 BorderBrush="Red"
                 BorderThickness="1"
                 Style="{StaticResource GroupPanelStyle}">

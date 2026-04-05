@@ -62,6 +62,25 @@
             <muxc:Expander HorizontalAlignment="Stretch">
                 <muxc:Expander.Header>
                     <StackPanel Orientation="Horizontal" Spacing="12">
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8AD;" />
+                        <TextBlock VerticalAlignment="Center" Text="Transfer" />
+                    </StackPanel>
+                </muxc:Expander.Header>
+                <StackPanel Spacing="8">
+                    <Button
+                        HorizontalAlignment="Stretch"
+                        Click="BtnExportSettings_Click"
+                        Content="Export Settings &amp; Vehicles" />
+                    <Button
+                        HorizontalAlignment="Stretch"
+                        Click="BtnImportSettings_Click"
+                        Content="Import Settings &amp; Vehicles" />
+                </StackPanel>
+            </muxc:Expander>
+
+            <muxc:Expander HorizontalAlignment="Stretch">
+                <muxc:Expander.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
                         <FontIcon
                             FontFamily="Segoe MDL2 Assets"
                             Foreground="Red"

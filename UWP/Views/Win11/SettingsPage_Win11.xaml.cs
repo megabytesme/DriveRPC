@@ -12,7 +12,7 @@ namespace DriveRPC.Shared.UWP.Views
     public sealed partial class SettingsPage_Win11 : SettingsPageBase
     {
         public SettingsPage_Win11()
-            : base(App.SecureStorage, App.AppDataReset)
+            : base(App.SecureStorage, App.AppDataReset, App.PresetStore)
         {
             try
             {

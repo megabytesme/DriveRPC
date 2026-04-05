@@ -30,13 +30,16 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\LocationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\NavigationFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\BarcodeUIService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UiThread.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\QrCodeScannerService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\AppearanceService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SecureStorage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ClientWebSocketAdapter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UpdateService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\HomePageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\AppearancePageBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\OobePageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\SettingsPageBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs" />
   </ItemGroup>

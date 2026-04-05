@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -244,5 +245,12 @@ namespace DriveRPC.Shared.Models
             string ext = Avatar.StartsWith("a_") ? "gif" : "png";
             return $"https://cdn.discordapp.com/avatars/{Id}/{Avatar}.{ext}?size={size}";
         }
+    }
+
+    public class SettingsTransferPackage
+    {
+        public int Version { get; set; } = 1;
+        public string AppearanceTag { get; set; }
+        public List<AppearancePreset> Vehicles { get; set; } = new List<AppearancePreset>();
     }
 }
