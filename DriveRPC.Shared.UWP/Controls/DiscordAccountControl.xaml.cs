@@ -1,6 +1,7 @@
 ﻿using DriveRPC.Shared.Models;
 using DriveRPC.Shared.Services;
 using DriveRPC.Shared.UWP.Helpers;
+using DriveRPC.Shared.UWP.Services;
 using Newtonsoft.Json;
 using System;
 using System.Text.RegularExpressions;
@@ -48,6 +49,7 @@ namespace DriveRPC.Shared.UWP.Controls
     public sealed partial class DiscordAccountControl : UserControl
     {
         private ISecureStorage _secureStorage;
+        private readonly WindowsHelloService _windowsHelloService = new WindowsHelloService();
         private string _currentToken;
         private DiscordUser _user;
 
@@ -173,7 +175,7 @@ namespace DriveRPC.Shared.UWP.Controls
 
             var pBox = new PasswordBox
             {
-                Password = _currentToken ?? "",
+                Password = isSignedIn ? string.Empty : (_currentToken ?? ""),
                 PlaceholderText = "Enter Discord Token",
                 Margin = spacing
             };
@@ -190,6 +192,22 @@ namespace DriveRPC.Shared.UWP.Controls
                 Content = "Show token text",
                 Margin = spacing
             };
+            revealCheck.IsEnabled = !isSignedIn;
+
+            var securityText = new TextBlock
+            {
+                FontSize = 12,
+                Margin = new Thickness(0, -5, 0, 10),
+                Opacity = 0.8,
+                TextWrapping = TextWrapping.Wrap
+            };
+
+            bool isTokenUnlocked = !isSignedIn;
+
+            if (isSignedIn)
+            {
+                securityText.Text = "Your saved token is hidden. Use Windows Hello to reveal it, or paste a replacement token below.";
+            }
 
             revealCheck.Checked += (s, args) => pBox.PasswordRevealMode = PasswordRevealMode.Visible;
             revealCheck.Unchecked += (s, args) => pBox.PasswordRevealMode = PasswordRevealMode.Hidden;
@@ -201,6 +219,7 @@ namespace DriveRPC.Shared.UWP.Controls
             stack.Children.Add(pBox);
             stack.Children.Add(vText);
             stack.Children.Add(revealCheck);
+            stack.Children.Add(securityText);
 
             var dialog = new ContentDialog
             {
@@ -216,10 +235,21 @@ namespace DriveRPC.Shared.UWP.Controls
                     await SaveTokenAsync(pBox.Password);
                     dialog.Hide();
                 }
+                else if (isSignedIn)
+                {
+                    dialog.Hide();
+                }
             }
 
             if (isSignedIn)
             {
+                var btnRevealSaved = new Button
+                {
+                    Content = "View Saved Token",
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    Margin = spacing
+                };
+
                 var btnSave = new Button
                 {
                     Content = "Save Changes",
@@ -235,6 +265,29 @@ namespace DriveRPC.Shared.UWP.Controls
                     HorizontalAlignment = HorizontalAlignment.Stretch
                 };
 
+                btnRevealSaved.Click += async (s, args) =>
+                {
+                    if (isTokenUnlocked)
+                    {
+                        pBox.Password = _currentToken ?? "";
+                        return;
+                    }
+
+                    var verification = await _windowsHelloService.VerifyAsync("Verify your identity to view the saved Discord token.");
+                    if (!verification.IsVerified)
+                    {
+                        securityText.Text = verification.ErrorMessage;
+                        securityText.Foreground = new SolidColorBrush(Colors.Red);
+                        return;
+                    }
+
+                    isTokenUnlocked = true;
+                    pBox.Password = _currentToken ?? "";
+                    revealCheck.IsEnabled = true;
+                    securityText.Text = "Windows Hello verified. You can now reveal the saved token for this session.";
+                    securityText.Foreground = new SolidColorBrush(Colors.Green);
+                };
+
                 btnSave.Click += async (s, args) => await HandleSaveAction();
                 btnSignOut.Click += async (s, args) =>
                 {
@@ -242,6 +295,7 @@ namespace DriveRPC.Shared.UWP.Controls
                     await ResetTokenAsync();
                 };
 
+                stack.Children.Add(btnRevealSaved);
                 stack.Children.Add(btnSave);
                 stack.Children.Add(btnSignOut);
             }

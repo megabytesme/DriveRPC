@@ -33,6 +33,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\BarcodeUIService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UiThread.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\QrCodeScannerService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\WindowsHelloService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\AppearanceService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SecureStorage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ClientWebSocketAdapter.cs" />
