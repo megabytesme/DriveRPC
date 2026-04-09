@@ -11,8 +11,6 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DriveRPC.Shared", "DriveRPC
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DriveRPC.Shared.UWP", "DriveRPC.Shared.UWP\DriveRPC.Shared.UWP.shproj", "{E47249AE-5371-48E6-A5D6-19571B5ADAA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MAUI", "MAUI\MAUI.csproj", "{EC2F8CBF-B49A-49D0-93D1-6CBD5E162F1E}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserPresenceRPC.Discord.Net", "..\UserPresenceRPC.Discord.Net\UserPresenceRPC.Discord.Net\UserPresenceRPC.Discord.Net.csproj", "{80BBBF19-A559-4FEF-A2B1-B89E31F09C92}"
 EndProject
 Global
