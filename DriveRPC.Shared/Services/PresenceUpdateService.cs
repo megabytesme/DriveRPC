@@ -39,10 +39,12 @@ namespace DriveRPC.Shared.Services
 
         private LocationInfo _lastLocation;
         private string _countryFlagAssetKey;
+        private GpsSnapshot _lastObservedGps;
 
         private bool _updateInProgress;
         private DateTimeOffset _lastUpdate = DateTimeOffset.MinValue;
         private static readonly TimeSpan MinInterval = TimeSpan.FromSeconds(3);
+        private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(10);
 
         private bool _locationDirty;
         private bool _running;
@@ -63,8 +65,9 @@ namespace DriveRPC.Shared.Services
             _reverseGeocoder = reverseGeocoder;
             _background = background;
 
-            _gps.LocationUpdated += (s, e) => _locationDirty = true;
-            _gps.ReplayTimeChanged += (s, t) => _locationDirty = true;
+            _gps.LocationUpdated += (s, e) => MarkGpsDirty();
+            _gps.HeadingUpdated += (s, e) => MarkGpsDirty();
+            _gps.ReplayTimeChanged += (s, t) => MarkGpsDirty();
         }
 
         public void Start()
@@ -122,7 +125,18 @@ namespace DriveRPC.Shared.Services
 
                     var now = DateTimeOffset.UtcNow;
 
-                    if (!_locationDirty)
+                    var gps = BuildSnapshot();
+                    var shouldRefresh = now - _lastUpdate >= RefreshInterval;
+                    var hasMeaningfulGpsChange = HasMeaningfulGpsChange(gps, _lastObservedGps);
+
+                    if (hasMeaningfulGpsChange)
+                    {
+                        _locationDirty = true;
+                    }
+
+                    _lastObservedGps = gps;
+
+                    if (!_locationDirty && !shouldRefresh)
                         continue;
 
                     if (!ShouldConsumeGps())
@@ -136,7 +150,7 @@ namespace DriveRPC.Shared.Services
                     if (token.IsCancellationRequested)
                         break;
 
-                    await UpdatePresenceAsync();
+                    await UpdatePresenceAsync(gps);
                 }
             }
             catch (TaskCanceledException) { }
@@ -156,7 +170,7 @@ namespace DriveRPC.Shared.Services
             return true;
         }
 
-        private async Task UpdatePresenceAsync()
+        private async Task UpdatePresenceAsync(GpsSnapshot gps)
         {
             if (_updateInProgress)
                 return;
@@ -180,12 +194,27 @@ namespace DriveRPC.Shared.Services
                 if (preset == null)
                     return;
 
-                var gps = BuildSnapshot();
-
                 if (gps != null)
                 {
-                    _lastLocation = await _reverseGeocoder.LookupAsync(gps.Latitude, gps.Longitude);
-                    await EnsureCountryFlagCachedAsync();
+                    try
+                    {
+                        var latestLocation = await _reverseGeocoder.LookupAsync(gps.Latitude, gps.Longitude);
+                        if (latestLocation != null)
+                        {
+                            _lastLocation = latestLocation;
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        await EnsureCountryFlagCachedAsync();
+                    }
+                    catch
+                    {
+                    }
                 }
 
                 var formatter = new StatusFormatter(preset, _lastLocation);
@@ -206,6 +235,12 @@ namespace DriveRPC.Shared.Services
             }
         }
 
+        private void MarkGpsDirty()
+        {
+            _locationDirty = true;
+            _lastObservedGps = BuildSnapshot();
+        }
+
         private GpsSnapshot BuildSnapshot()
         {
             var loc = _gps.CurrentLocation;
@@ -221,6 +256,34 @@ namespace DriveRPC.Shared.Services
                 SpeedMetersPerSecond = _gps.SpeedMetersPerSecond,
                 HeadingDegrees = _gps.HeadingDegrees
             };
+        }
+
+        private static bool HasMeaningfulGpsChange(GpsSnapshot current, GpsSnapshot previous)
+        {
+            if (current == null || previous == null)
+                return current != previous;
+
+            if (Math.Abs(current.Latitude - previous.Latitude) >= 0.00005d)
+                return true;
+
+            if (Math.Abs(current.Longitude - previous.Longitude) >= 0.00005d)
+                return true;
+
+            if (HasNumericChange(current.SpeedMetersPerSecond, previous.SpeedMetersPerSecond, 0.5d))
+                return true;
+
+            if (HasNumericChange(current.HeadingDegrees, previous.HeadingDegrees, 5d))
+                return true;
+
+            return false;
+        }
+
+        private static bool HasNumericChange(double? current, double? previous, double threshold)
+        {
+            if (current == null || previous == null)
+                return current != previous;
+
+            return Math.Abs(current.Value - previous.Value) >= threshold;
         }
 
         private async Task EnsureCountryFlagCachedAsync()

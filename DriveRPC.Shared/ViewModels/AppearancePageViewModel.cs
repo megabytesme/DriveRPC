@@ -23,6 +23,7 @@ namespace DriveRPC.Shared.ViewModels
 
         private LocationInfo _lastLocation;
         private string _countryFlagAssetKey;
+        private int _previewRevision;
 
         public ObservableCollection<AppearancePreset> Presets { get; }
             = new ObservableCollection<AppearancePreset>();
@@ -48,6 +49,9 @@ namespace DriveRPC.Shared.ViewModels
             get => _editingPreset;
             set
             {
+                if (ReferenceEquals(_editingPreset, value))
+                    return;
+
                 _editingPreset = value;
                 OnPropertyChanged();
                 UpdatePreview();
@@ -177,23 +181,6 @@ namespace DriveRPC.Shared.ViewModels
                 Presets.Add(DefaultPreset());
             }
 
-            foreach (var preset in Presets)
-            {
-                if (!string.IsNullOrWhiteSpace(preset.CarImageUrl) &&
-                    string.IsNullOrWhiteSpace(preset.CachedLargeImageKey))
-                {
-                    preset.CachedLargeImageKey = await _rpc.CacheImageAsync(preset.CarImageUrl);
-                }
-
-                if (!string.IsNullOrWhiteSpace(preset.SmallImageUrl) &&
-                    string.IsNullOrWhiteSpace(preset.CachedSmallImageKey))
-                {
-                    preset.CachedSmallImageKey = await _rpc.CacheImageAsync(preset.SmallImageUrl);
-                }
-            }
-
-            await SavePresetsAsync();
-
             SelectedPreset = Presets[0];
         }
 
@@ -232,6 +219,46 @@ namespace DriveRPC.Shared.ViewModels
             Presets.Add(preset);
             SelectedPreset = preset;
             _ = SavePresetsAsync();
+        }
+
+        public AppearancePreset DuplicatePreset(AppearancePreset preset)
+        {
+            if (preset == null)
+                return null;
+
+            var clone = preset.Clone();
+            clone.Name = string.IsNullOrWhiteSpace(preset.Name)
+                ? "New Preset"
+                : preset.Name + " (Copy)";
+
+            Presets.Add(clone);
+            SelectedPreset = clone;
+            _ = SavePresetsAsync();
+            return clone;
+        }
+
+        public bool DeletePreset(AppearancePreset preset)
+        {
+            if (preset == null || Presets.Count <= 1)
+                return false;
+
+            var index = Presets.IndexOf(preset);
+            if (index < 0)
+                return false;
+
+            Presets.RemoveAt(index);
+
+            if (Presets.Count > 0)
+            {
+                SelectedPreset = Presets[Math.Min(index, Presets.Count - 1)];
+            }
+            else
+            {
+                SelectedPreset = null;
+            }
+
+            _ = SavePresetsAsync();
+            return true;
         }
 
         public void RemovePreset()
@@ -296,6 +323,8 @@ namespace DriveRPC.Shared.ViewModels
 
         private async void UpdatePreview()
         {
+            var revision = ++_previewRevision;
+
             if (EditingPreset == null)
             {
                 PreviewActivityName = "";
@@ -305,10 +334,15 @@ namespace DriveRPC.Shared.ViewModels
 
             var gps = BuildSnapshot();
 
-            if (gps != null)
+            if (_gps.CurrentLocation != null)
             {
                 _lastLocation = await _reverseGeocoder.ReverseGeocodeAsync(gps.Latitude, gps.Longitude);
+                if (revision != _previewRevision)
+                    return;
+
                 await EnsureCountryFlagCachedAsync();
+                if (revision != _previewRevision)
+                    return;
             }
 
             var formatter = new StatusFormatter(EditingPreset, _lastLocation);
@@ -423,6 +457,11 @@ namespace DriveRPC.Shared.ViewModels
         {
             _gps.SeekReplay(progress0to1);
             OnPropertyChanged(nameof(ReplayTimeText));
+        }
+
+        public void RefreshPreview()
+        {
+            UpdatePreview();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

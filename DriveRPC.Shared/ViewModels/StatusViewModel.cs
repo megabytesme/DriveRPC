@@ -73,7 +73,7 @@ namespace DriveRPC.Shared.ViewModels
         public bool? PresenceAfk => _rpc.CurrentPresence?.Afk;
         public long? PresenceSince => _rpc.CurrentPresence?.Since;
 
-        private Activity PrimaryActivity
+        private UserPresenceRPC.Discord.Net.Models.Activity PrimaryActivity
         {
             get
             {
