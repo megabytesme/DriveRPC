@@ -30,10 +30,6 @@ namespace DriveRPC.Shared.UWP.Services
             _socket = new MessageWebSocket();
             _socket.Control.MessageType = SocketMessageType.Utf8;
 
-            _socket.SetRequestHeader("User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-            _socket.SetRequestHeader("Origin", "https://discord.com");
-
             foreach (var kv in _pendingHeaders)
                 _socket.SetRequestHeader(kv.Key, kv.Value);
 

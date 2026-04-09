@@ -20,28 +20,32 @@ namespace DriveRPC.Shared.UWP.Controls
         private RemoteAuthService _authService;
         private ClientWebSocketAdapter _socket;
         private WindowsWebHttpHandler _http;
+        private bool _isStarted;
+        private bool _isDisposed;
 
         public DiscordQrLoginControl()
         {
             InitializeComponent();
             Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
         }
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            await StartAuthAsync();
-        }
+            if (_isStarted || _isDisposed)
+                return;
 
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            Cleanup();
+            _isStarted = true;
+            await StartAuthAsync();
         }
 
         private async Task StartAuthAsync()
         {
             _socket = new ClientWebSocketAdapter();
             _http = new WindowsWebHttpHandler();
+            _http.SetHeader(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            _http.SetHeader("Origin", "https://discord.com");
             _authService = new RemoteAuthService(_socket, _http);
 
             _authService.QrCodeUrlGenerated += async (s, url) =>
@@ -69,11 +73,7 @@ namespace DriveRPC.Shared.UWP.Controls
             {
                 await Dispatcher.RunAsync(
                     Windows.UI.Core.CoreDispatcherPriority.Normal,
-                    () =>
-                    {
-                        TokenFound?.Invoke(this, token);
-                        Cleanup();
-                    }
+                    () => TokenFound?.Invoke(this, token)
                 );
             };
 
@@ -111,6 +111,11 @@ namespace DriveRPC.Shared.UWP.Controls
 
         private void Cleanup()
         {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+
             _authService?.Dispose();
             _authService = null;
 
@@ -172,6 +177,11 @@ namespace DriveRPC.Shared.UWP.Controls
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             RequestClose?.Invoke();
+        }
+
+        public void Dispose()
+        {
+            Cleanup();
         }
     }
 }

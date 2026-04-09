@@ -329,6 +329,8 @@ namespace DriveRPC.Shared.UWP.Controls
         {
             var qrControl = new DiscordQrLoginControl();
             var dialog = new ContentDialog { Content = qrControl, PrimaryButtonText = "Close" };
+            qrControl.RequestClose += () => dialog.Hide();
+            dialog.Closed += (sender, args) => qrControl.Dispose();
 
             qrControl.TokenFound += async (s, token) =>
             {
